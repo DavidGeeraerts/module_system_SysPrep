@@ -23,8 +23,8 @@ SETLOCAL Enableextensions
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=1.0.0
-SET $SCRIPT_BUILD=20200922-1445
+SET $SCRIPT_VERSION=1.1.0
+SET $SCRIPT_BUILD=20200923-0900
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -76,8 +76,10 @@ SET $TIMEOUT=10
 :start
 	IF EXIST "%$WD%\%$MODULE_LOG%" Goto skipStart
 	echo %DATE% %TIME% Start... >> "%$WD%\%$MODULE_LOG%"
+	echo Script Version: %$SCRIPT_VERSION% >> "%$WD%\%$MODULE_LOG%"
+	echo script Build: %$SCRIPT_BUILD% >> "%$WD%\%$MODULE_LOG%"
 	echo Computer: %COMPUTERNAME% >> "%$WD%\%$MODULE_LOG%"
-	echo User: %USERNAME% >> "%$WD%\%$MODULE_LOG%"
+	echo Active session... >> "%$WD%\%$MODULE_LOG%"
 :skipStart
 
 ::	Volume
@@ -90,7 +92,7 @@ SET $TIMEOUT=10
 :: Setup on Startup
 ::	mostly automates Windows Updates for reboots
 	IF EXIST "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\module_system_SysPrep" GoTo skipSetupS
-	mklink "%ProgramData%\Microsoft\Windows\Start Menu\Programs\Startup\module_system_SysPrep" "%$VOLUME%\modules\module_system_SysPrep\module_system_SysPrep.cmd"
+	mklink "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup" "%$VOLUME%\modules\module_system_SysPrep\module_system_SysPrep.cmd"
 :skipSetupS
 
 
@@ -120,7 +122,7 @@ IF %$BANNER% EQU 1 GoTo :EOF
 
 SET $BANNER=1
 
-::	speed up the process from reboots
+rem	speed up the process from reboots
 IF NOT EXIST "%$WD%\1_Administrator_Complete.txt" GoTo Admin
 IF NOT EXIST "%$WD%\2_USER_Profiles_Complete.txt" GoTo UPC
 IF NOT EXIST "%$WD%\3_Scheduled_Task_Complete.txt" GoTo stc
@@ -133,12 +135,13 @@ IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
 
 ::	#1
 ::	Configure Local Administrator Account
-::	there's a space between username and options which is the password (blank)
+
 :Admin
 	SET	$STEP_NUM=1
 	CALL :banner
 	IF EXIST "%$WD%\1_Administrator_Complete.txt" GoTo skipAdmin
 	Echo Processing local Administrator...
+	rem	there's a space between username and options which is the password (blank)
 	NET USER Administrator  /ACTIVE:YES && (echo %DATE% %TIME% > %$WD%\1_Administrator_Complete.txt)
 	NET USER >> "%$WD%\1_Administrator_Complete.txt"
 	NET LOCALGROUP Administrators >> "%$WD%\1_Administrator_Complete.txt"
@@ -166,12 +169,15 @@ IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
 	delprof2 /l
 	delprof2 /u /i /ed:admin*
 	delprof2 /l
-	:: In case delprof fails, do it manaully
-	net user > "%$WD%\Local_Users.txt"
+	rem In case delprof fails, do it manaully
 	FIND /I "%$CUSTOM_USER%" "%$WD%\Local_Users.txt" && (NET USER %$CUSTOM_USER% /DELETE) && (IF EXIST "%SYSTEMDRIVE%\Users\%$CUSTOM_USER%" RD /S /Q "%SYSTEMDRIVE%\Users\%$CUSTOM_USER%")
 	FIND /I "defaultuser0" "%$WD%\Local_Users.txt" && (NET USER defaultuser0 /DELETE) && (IF EXIST "%SYSTEMDRIVE%\Users\defaultuser0" RD /S /Q "%SYSTEMDRIVE%\Users\defaultuser0")
 	echo Done.
+	rem	can check this file to make sure user(s) have been deleted. 
+	net user > "%$WD%\Local_Users.txt"
 	echo %DATE% %TIME% > "%$WD%\2_USER_Profiles_Complete.txt"
+	rem try again on next reboot if cleaning up user(s) failed
+	FIND /I "%$CUSTOM_USER%" "%$WD%\Local_Users.txt" && DEL /F /Q "%$WD%\2_USER_Profiles_Complete.txt"
 	Timeout /T %$TIMEOUT%
 :skipUPC
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -209,13 +215,6 @@ IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
 	@powershell Install-WindowsUpdate -AcceptAll -AutoReboot
 	echo Reboot?
 	@powershell Get-WURebootStatus | FIND /I "False" && echo %DATE% %TIME% > "%$WD%\4_Winddows_Update_Complete.txt"
-
-	::	UsoClient Windows 10 only
-	::		not finding UsoClient reliable
-	::	UsoClient StartScan
-	::	UsoClient StartDownload
-	::	UsoClient StartInstall
-	::	UsoClient RestartDevice
 	echo Done.
 	Timeout /T %$TIMEOUT%
 	
@@ -262,13 +261,13 @@ IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
 	CALL :banner
 	IF EXIST "%$WD%\7_Final_Reboot_Complete.txt" GoTo skipFB
 	echo Processing final reboot...
-	DEL /F /Q /S "%ProgramData%\Microsoft\Windows\Start Menu\Programs\Startup\module_system_SysPrep*" 2> nul
+	DEL /F /Q /S "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\module_system_SysPrep*" 2> nul
 	echo %DATE% %TIME% > "%$WD%\7_Final_Reboot_Complete.txt"
 	shutdown /R /T 5 /f /c "Final Shutdown for SysPrep."
 	echo Done.
 	::	remove from startup
 	::	there's no point in running after reboot since sysprep requires admin privilege
-	GoTo End
+	exit
 :skipFB
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -285,11 +284,13 @@ IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
 	openfiles 1> nul 2> nul
 	SET $ADMIN_STATUS=%ERRORLEVEL%
 	IF %$ADMIN_STATUS% NEQ 0 GoTo sysprepE
-	RD /S /Q "%$WD%"
+	echo SysPrep activation %DATE% %TIME% >> "%$WD%\%$MODULE_LOG%"
+	echo End. >> "%$WD%\%$MODULE_LOG%"
+	robocopy "%$WD%" "%SystemRoot%\System32\SysPrep\%$SCRIPT_NAME%" /MOVE /R:1 /W:2
 	IF EXIST "%SystemRoot%\System32\SysPrep\Panther" RD /S /Q "%SystemRoot%\System32\SysPrep\Panther"
 	:: Needs to run with Administrative privilege
 	sysprep /oobe /generalize /shutdown
-
+	exit
 :sysprepE
 	Echo FATAL: Not running with Administrative privilege!
 	ECHO.
@@ -300,6 +301,5 @@ IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :End
-echo End. >> "%$WD%\%$MODULE_LOG%"
 ENDLOCAL
 Exit /B
