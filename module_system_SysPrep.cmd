@@ -23,8 +23,8 @@ SETLOCAL Enableextensions
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=1.1.0
-SET $SCRIPT_BUILD=20200923-0900
+SET $SCRIPT_VERSION=1.2.0
+SET $SCRIPT_BUILD=20200924-1035
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -37,6 +37,9 @@ color 4E
 ::###########################################################################::
 
 SET $CUSTOM_USER=Scientific
+
+::	From the root of the volume
+SET $DELPROF2_PATH=Tools
 
 ::	Working Directory
 SET $WD=%PUBLIC%\Documents\%$SCRIPT_NAME%
@@ -54,21 +57,113 @@ SET $MODULE_LOG=%$SCRIPT_NAME%.log
 :: Timeout (seconds)
 SET $TIMEOUT=10
 
+::	Unattend.xml
+::	Remove all Unattend.xml from the systemdrive
+::	before running SysPrep
+::	{0,1}
+::	0 = No
+::	1 = Yes
+SET $UNATTEND_CLEAN=0
+
+
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ::
 ::##### Everything below here is 'hard-coded' [DO NOT MODIFY] #####
 ::
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-
 :SLT
-::	Start Time
+	:: Start Time Start Date
 	SET $START_TIME=%Time%
 	SET $START_DATE=%Date%
+	
+:dir
+	:: Directory Check
+	IF NOT EXIST "%$WD%\var" MD "%$WD%\var"
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+SET $BANNER=0
+SET $STEP_NUM=0
+SET "$STEP_DESCRIP=Preperations"
+
+:banner
+cls
+:: CONSOLE OUTPUT 
+ECHO   ****************************************************************
+ECHO. 
+ECHO      %$SCRIPT_NAME% %$SCRIPT_VERSION% [%$SCRIPT_BUILD%]
+ECHO.
+ECHO      %$START_DATE% %$START_TIME%
+echo.
+echo.		Step #: %$STEP_NUM% (%$STEP_DESCRIP%)
+echo.
+ECHO   ****************************************************************
+ECHO.
+ECHO.
+IF %$BANNER% EQU 1 GoTo :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-:: Directory Check
-	IF NOT EXIST "%$WD%" MD "%$WD%"
+SET $BANNER=1
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+Echo Preparing to run the following:
+echo.
+echo 1. Administrator, local configuration
+echo 2. Users, cleanup local users
+echo 3. Scheduled Task, cleanup
+echo 4. Windows Update
+echo 5. Disk Check, for dirty bit
+echo 6. CleanMgr, run disk cleanup
+echo 7. Final reboot, in preperation for running SysPrep
+echo 8. SysPrep
+echo.
+Timeout /T %$TIMEOUT%
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+:ISO8601
+	::	Make ISO timestamp
+	IF EXIST "%$WD%\var\var_ISO8601_Date.txt" GoTo skipISO
+	@powershell Get-Date -format "yyyy-MM-dd" > "%$WD%\var\var_ISO8601_Date.txt"
+	:skipISO
+	SET /P $ISO_DATE= < "%$WD%\var\var_ISO8601_Date.txt"
+
+:DT
+	IF EXIST "%$WD%\var\var_Time.txt" GoTo skipT 
+	@powershell Get-Date -format "HHMM" > "%$WD%\var\var_Time.txt"
+	:: Time for Script run for folder creation
+	:skipT
+	SET $TIME= < "%$WD%\var\var_Time.txt"
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+:Param
+	::	Default User
+	SET $PARAMETER1=%~1
+	IF DEFINED $PARAMETER1 echo %$CUSTOM_USER%> "%$WD%\var\var_Parameter-1.txt"
+	IF NOT DEFINED $PARAMETER1 IF EXIST "%$WD%\var\var_Parameter-1.txt" SET /P $PARAMETER1= < "%$WD%\var\var_Parameter-1.txt"
+	IF NOT DEFINED $PARAMETER1 GoTo skipParam
+	SET $CUSTOM_USER=%$PARAMETER1%
+	::	Timeout
+	SET $PARAMETER2=%~2
+	IF DEFINED $PARAMETER2 echo %$TIMEOUT%> "%$WD%\var\var_Parameter-2.txt"
+	IF NOT DEFINED $PARAMETER2 IF EXIST "%$WD%\var\var_Parameter-2.txt" SET /P $PARAMETER2= < "%$WD%\var\var_Parameter-2.txt"
+	IF NOT DEFINED $PARAMETER2 GoTo skipParam
+	SET $TIMEOUT=%$PARAMETER2%
+	::	Unattend.xml Cleanup
+	SET $PARAMETER3=%~3
+	IF DEFINED $PARAMETER3 echo %UNATTEND_CLEAN%> "%$WD%\var\var_Parameter-3.txt"
+	IF NOT DEFINED $PARAMETER3 IF EXIST "%$WD%\var\var_Parameter-3.txt" SET /P $PARAMETER3= < "%$WD%\var\var_Parameter-3.txt"
+	IF NOT DEFINED $PARAMETER3 GoTo skipParam
+	SET UNATTEND_CLEAN=%$PARAMETER3%
+	::	DelProf2 Path
+	SET $PARAMETER4=%~4
+	IF DEFINED $PARAMETER4 echo %$DELPROF2_PATH%> "%$WD%\var\var_Parameter-4.txt" 
+	IF NOT DEFINED $PARAMETER4 IF EXIST "%$WD%\var\var_Parameter-4.txt" SET /P $PARAMETER4= < "%$WD%\var\var_Parameter-4.txt" 
+	IF NOT DEFINED $PARAMETER4 GoTo skipParam
+	SET $DELPROF2_PATH=%$PARAMETER4%
+:skipParam
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 
 :: Open Directory
 	@explorer %$WD%
@@ -79,6 +174,10 @@ SET $TIMEOUT=10
 	echo Script Version: %$SCRIPT_VERSION% >> "%$WD%\%$MODULE_LOG%"
 	echo script Build: %$SCRIPT_BUILD% >> "%$WD%\%$MODULE_LOG%"
 	echo Computer: %COMPUTERNAME% >> "%$WD%\%$MODULE_LOG%"
+	echo $CUSTOM_USER: %$CUSTOM_USER% >> "%$WD%\%$MODULE_LOG%"
+	echo $TIMEOUT: %$TIMEOUT% >> "%$WD%\%$MODULE_LOG%"
+	echo $UNATTEND_CLEAN: %$UNATTEND_CLEAN% >> "%$WD%\%$MODULE_LOG%"
+	echo $DELPROF2_PATH: %$DELPROF2_PATH% >> "%$WD%\%$MODULE_LOG%"
 	echo Active session... >> "%$WD%\%$MODULE_LOG%"
 :skipStart
 
@@ -96,41 +195,18 @@ SET $TIMEOUT=10
 :skipSetupS
 
 
-::	Step number
-SET	$STEP_NUM=0
-
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-SET $BANNER=0
-
-:banner
-cls
-:: CONSOLE OUTPUT 
-ECHO   ****************************************************************
-ECHO. 
-ECHO      %$SCRIPT_NAME% %$SCRIPT_VERSION% [%$SCRIPT_BUILD%]
-ECHO.
-ECHO      %$START_DATE% %$START_TIME%
-echo.
-echo.		Step #: %$STEP_NUM%
-echo.
-ECHO   ****************************************************************
-ECHO.
-ECHO.
-IF %$BANNER% EQU 1 GoTo :EOF
-:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-SET $BANNER=1
-
-rem	speed up the process from reboots
-IF NOT EXIST "%$WD%\1_Administrator_Complete.txt" GoTo Admin
-IF NOT EXIST "%$WD%\2_USER_Profiles_Complete.txt" GoTo UPC
-IF NOT EXIST "%$WD%\3_Scheduled_Task_Complete.txt" GoTo stc
-IF NOT EXIST "%$WD%\4_Winddows_Update_Complete.txt" GoTo WU
-IF NOT EXIST "%$WD%\5_Disk_Check_Complete.txt" GoTo fdc
-IF NOT EXIST "%$WD%\6_Disk_CleanMGR_Complete.txt" GoTo CM
-IF NOT EXIST "%$WD%\7_Final_Reboot_Complete.txt" GoTo FB
-IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
+:check
+	rem	speed up the process from reboots
+	IF NOT EXIST "%$WD%\1_Administrator_Complete.txt" GoTo Admin
+	IF NOT EXIST "%$WD%\2_USER_Profiles_Complete.txt" GoTo UPC
+	IF NOT EXIST "%$WD%\3_Scheduled_Task_Complete.txt" GoTo stc
+	IF NOT EXIST "%$WD%\4_Winddows_Update_Complete.txt" GoTo WU
+	IF NOT EXIST "%$WD%\5_Disk_Check_Complete.txt" GoTo fdc
+	IF NOT EXIST "%$WD%\6_Disk_CleanMGR_Complete.txt" GoTo CM
+	IF NOT EXIST "%$WD%\7_Final_Reboot_Complete.txt" GoTo FB
+	IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 ::	#1
@@ -138,6 +214,7 @@ IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
 
 :Admin
 	SET	$STEP_NUM=1
+	SET "$STEP_DESCRIP=Administrator, local configuration"
 	CALL :banner
 	IF EXIST "%$WD%\1_Administrator_Complete.txt" GoTo skipAdmin
 	Echo Processing local Administrator...
@@ -160,14 +237,16 @@ IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
 ::	Depends on DELPROF2
 :UPC
 	SET	$STEP_NUM=2
+	SET "$STEP_DESCRIP=Users, cleanup local users"
 	CALL :banner
 	IF EXIST "%$WD%\2_USER_Profiles_Complete.txt" GoTo skipUPC
 	echo Processing User Profile cleanup...
 	::	prefer where launched
-	IF NOT EXIST "%SYSTEMROOT%\System32\delprof2.exe" Robocopy "%$VOLUME%\Tools" "%SYSTEMROOT%\System32" delprof2.exe /r:1 /w:2
-	IF EXIST "%$VOLUME%\Tools" (CD /D "%$VOLUME%\Tools") ELSE (cd /D "%SYSTEMROOT%\System32")
+	IF NOT EXIST "%SYSTEMROOT%\System32\delprof2.exe" Robocopy "%$VOLUME%\%$DELPROF2_PATH%" "%SYSTEMROOT%\System32" delprof2.exe /r:1 /w:2
+	IF EXIST "%$VOLUME%\%$DELPROF2_PATH%" (CD /D "%$VOLUME%\%$DELPROF2_PATH%") ELSE (cd /D "%SYSTEMROOT%\System32")
 	delprof2 /l
 	delprof2 /u /i /ed:admin*
+	CALL :banner
 	delprof2 /l
 	rem In case delprof fails, do it manaully
 	FIND /I "%$CUSTOM_USER%" "%$WD%\Local_Users.txt" && (NET USER %$CUSTOM_USER% /DELETE) && (IF EXIST "%SYSTEMDRIVE%\Users\%$CUSTOM_USER%" RD /S /Q "%SYSTEMDRIVE%\Users\%$CUSTOM_USER%")
@@ -187,6 +266,7 @@ IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
 ::	OneDrive leaves orphaned scheduled tasks
 :stc
 	SET	$STEP_NUM=3
+	SET "$STEP_DESCRIP=Scheduled Task, cleanup"
 	CALL :banner
 	IF EXIST "%$WD%\3_Scheduled_Task_Complete.txt" GoTo skipSTC
 	echo Processing Scheduled Taks cleanup...
@@ -201,17 +281,23 @@ IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
 :: Process Windows Updates
 :WU
 	SET	$STEP_NUM=4
+	SET "$STEP_DESCRIP=Windows Update"
 	CALL :banner
 	echo Processing Windows Updates...
+	@powershell Get-WindowsUpdate 2> nul
+	IF %ERRORLEVEL% EQU 0 GoTo jumpWU
 	@powershell Get-ExecutionPolicy -list
 	::	by default for non-domain joined computers, may require security config
-	@powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -scope CurrentUser -Force 
+	@powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -scope CurrentUser -Force
+	CALL :banner
+	@powershell Get-ExecutionPolicy -list
 	:: Windows Update PowerShell Module
 	:: https://gallery.technet.microsoft.com/scriptcenter/2d191bcd-3308-4edd-9de2-88dff796b0bc
 	@powershell Install-PackageProvider -name NuGet -Force
 	@powershell Install-Module -name PSWindowsUpdate -Force
 	@powershell Import-Module PSWindowsUpdate
 	@powershell Get-WindowsUpdate
+	:jumpWU
 	@powershell Install-WindowsUpdate -AcceptAll -AutoReboot
 	echo Reboot?
 	@powershell Get-WURebootStatus | FIND /I "False" && echo %DATE% %TIME% > "%$WD%\4_Winddows_Update_Complete.txt"
@@ -224,6 +310,7 @@ IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
 ::	Check if System Drive is dirty
 :fdc
 	SET	$STEP_NUM=5
+	SET "$STEP_DESCRIP=Disk Check, for dirty bit"
 	CALL :banner
 	IF EXIST "%$WD%\5_Disk_Check_Complete.txt" GoTo skipFDC
 	echo Checking System Disk... 
@@ -238,6 +325,7 @@ IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
 ::	CLEANMGR
 :CM
 	SET	$STEP_NUM=6
+	SET "$STEP_DESCRIP=CleanMgr, run disk cleanup"
 	CALL :banner
 	IF EXIST "%$WD%\6_Disk_CleanMGR_Complete.txt" GoTo skipCM
 	echo Processing Clean Manager for disk space...
@@ -258,6 +346,7 @@ IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
 ::	Final reboot
 :FB
 	SET	$STEP_NUM=7
+	SET "$STEP_DESCRIP=Final reboot, in preperation for running SysPrep"
 	CALL :banner
 	IF EXIST "%$WD%\7_Final_Reboot_Complete.txt" GoTo skipFB
 	echo Processing final reboot...
@@ -275,6 +364,7 @@ IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
 ::	SysPrep
 :sysprep
 	SET	$STEP_NUM=8
+	SET "$STEP_DESCRIP=SysPrep"
 	CALL :banner
 	echo Processing SysPrep...
 	Timeout /T %$TIMEOUT%
@@ -286,9 +376,22 @@ IF NOT EXIST "%$WD%\8_SysPrep_Running.txt" GoTo sysprep
 	IF %$ADMIN_STATUS% NEQ 0 GoTo sysprepE
 	echo SysPrep activation %DATE% %TIME% >> "%$WD%\%$MODULE_LOG%"
 	echo End. >> "%$WD%\%$MODULE_LOG%"
-	robocopy "%$WD%" "%SystemRoot%\System32\SysPrep\%$SCRIPT_NAME%" /MOVE /R:1 /W:2
+	robocopy "%$WD%" "%SystemRoot%\System32\SysPrep\%$SCRIPT_NAME%\%$ISO_DATE%" /MOVE /S /E /R:1 /W:2
 	IF EXIST "%SystemRoot%\System32\SysPrep\Panther" RD /S /Q "%SystemRoot%\System32\SysPrep\Panther"
+:UC
+	echo Checking on Unattend.xml cleanup...
+	IF %$UNATTEND_CLEAN% EQU 0 GoTo skipUC
+	(REG QUERY "HKEY_LOCAL_MACHINE\System\Setup\UnattendFile" 2> nul) && (REG DELETE "HKEY_LOCAL_MACHINE\System\Setup\UnattendFile" /VA /f)
+	IF EXIST "%WINDIR%\Panther\Unattend\Unattend.xml" DEL /F /Q "%WINDIR%\Panther\Unattend\Unattend.xml"
+	IF EXIST "%WINDIR%\Panther\Unattend\Autounattend.xml" DEL /F /Q "%WINDIR%\Panther\Unattend\Autounattend.xml"
+	IF EXIST "%WINDIR%\Panther\Unattend.xml" DEL /F /Q "%WINDIR%\Panther\Unattend.xml"
+	IF EXIST "%WINDIR%\System32\Sysprep\Unattend.xml" DEL /F /Q "%WINDIR%\System32\Sysprep\Unattend.xml"
+	IF EXIST "%SYSTEMDRIVE%\unattend.xml" DEL /F /Q "%SYSTEMDRIVE%\unattend.xml"
+	IF EXIST "%SYSTEMDRIVE%\Autounattend.xml" DEL /F /Q "%SYSTEMDRIVE%\Autounattend.xml"
+:skipUC
 	:: Needs to run with Administrative privilege
+	CALL :banner
+	echo Running SysPrep...
 	sysprep /oobe /generalize /shutdown
 	exit
 :sysprepE
