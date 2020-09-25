@@ -6,6 +6,12 @@
 
 Automated processing of SysPrep
 
+
+### Download
+
+[Download](https://raw.githubusercontent.com/DavidGeeraerts/module_system_SysPrep/main/module_system_SysPrep.cmd) --right-click and "Save Link as..."
+
+
 ### Features
 
 1. Administrator, local configuration
@@ -24,6 +30,7 @@ Automated processing of SysPrep
 
 8. SysPrep
 
+
 #### Instructions
 
 - Manually run module_system_SysPrep with administrative privilege
@@ -32,6 +39,7 @@ Automated processing of SysPrep
 - CleanMgr will prompt if SAGE 100 is not set
 - Final Reboot will reboot and auto-login Administrator
 - Manually run module_system_SysPrep with privilege
+
 
 #### Dependencies
 

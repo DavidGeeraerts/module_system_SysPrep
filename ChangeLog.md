@@ -21,7 +21,7 @@
 
 ## Version 1.2.1 (2020-09-25)
 ### Changed
-- Step 1 log off to reboot to flush custom user profile
+- Step 1 log-off to reboot to flush custom user profile
 
 
 
