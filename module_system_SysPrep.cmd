@@ -23,8 +23,8 @@ SETLOCAL Enableextensions
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=1.2.0
-SET $SCRIPT_BUILD=20200924-1035
+SET $SCRIPT_VERSION=1.2.1
+SET $SCRIPT_BUILD=20200925-1400
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -223,10 +223,11 @@ Timeout /T %$TIMEOUT%
 	NET USER >> "%$WD%\1_Administrator_Complete.txt"
 	NET LOCALGROUP Administrators >> "%$WD%\1_Administrator_Complete.txt"
 	NET USER Administrator >> "%$WD%\1_Administrator_Complete.txt"
+	NET USER %$CUSTOM_USER% /Active:No
 	Timeout /T %$TIMEOUT%
 	::	no need to logoff if already logged in as Administrator
 	IF "%USERNAME%"=="Administrator" GoTo skipAdmin
-	logoff
+	shutdown /R /T 5 /f /c "Reboot to flush user profile."
 	GoTo End
 :skipAdmin
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

@@ -19,6 +19,14 @@
 
 ---
 
+## Version 1.2.1 (2020-09-25)
+### Changed
+- Step 1 log off to reboot to flush custom user profile
+
+
+
+---
+
 ## Version 1.2.0 (2020-09-24)
 ### Added
 - variable where delprof2 directory path
@@ -34,7 +42,6 @@
 - start banner 
 - Windows-update module check for speed
 
----
 
 ## Version 1.1.0 (2020-09-23)
 ### Added
