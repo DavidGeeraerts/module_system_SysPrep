@@ -3,12 +3,14 @@
 
 ## Description
 
-Automated processing of SysPrep
+Mostly automated processing of SysPrep
 
 
 ### Download
 
-[Download](https://raw.githubusercontent.com/DavidGeeraerts/module_system_SysPrep/main/module_system_SysPrep.cmd) --right-click and "Save Link as..."
+[Download Project](https://github.com/DavidGeeraerts/module_system_SysPrep/archive/main.zip)
+
+[Download .cmd](https://raw.githubusercontent.com/DavidGeeraerts/module_system_SysPrep/main/module_system_SysPrep.cmd) --right-click and "Save Link as..."
 
 
 ### Process List
