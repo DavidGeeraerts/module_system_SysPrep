@@ -23,8 +23,8 @@ SETLOCAL Enableextensions
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=1.2.1
-SET $SCRIPT_BUILD=20200925-1400
+SET $SCRIPT_VERSION=1.3.0
+SET $SCRIPT_BUILD=20201001-1000
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -40,6 +40,12 @@ SET $CUSTOM_USER=Scientific
 
 ::	From the root of the volume
 SET $DELPROF2_PATH=Tools
+
+::	Unattend directory from the root of the volume
+SET $UNATTEND_DIR=Unattend
+
+::	Name of unattend file to seed
+SET $Unattend_FILE=unattend.xml
 
 ::	Working Directory
 SET $WD=%PUBLIC%\Documents\%$SCRIPT_NAME%
@@ -60,10 +66,10 @@ SET $TIMEOUT=10
 ::	Unattend.xml
 ::	Remove all Unattend.xml from the systemdrive
 ::	before running SysPrep
-::	{0,1}
+::	{No,Yes}
 ::	0 = No
 ::	1 = Yes
-SET $UNATTEND_CLEAN=0
+SET $UNATTEND_CLEAN=No
 
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -95,7 +101,7 @@ ECHO      %$SCRIPT_NAME% %$SCRIPT_VERSION% [%$SCRIPT_BUILD%]
 ECHO.
 ECHO      %$START_DATE% %$START_TIME%
 echo.
-echo.		Step #: %$STEP_NUM% (%$STEP_DESCRIP%)
+echo.		Process #: %$STEP_NUM% (%$STEP_DESCRIP%)
 echo.
 ECHO   ****************************************************************
 ECHO.
@@ -108,13 +114,13 @@ SET $BANNER=1
 
 Echo Preparing to run the following:
 echo.
-echo 1. Administrator, local configuration
-echo 2. Users, cleanup local users
-echo 3. Scheduled Task, cleanup
-echo 4. Windows Update
-echo 5. Disk Check, for dirty bit
-echo 6. CleanMgr, run disk cleanup
-echo 7. Final reboot, in preperation for running SysPrep
+IF NOT EXIST "%$WD%\1_Administrator_Complete.txt" echo 1. Administrator, local configuration
+IF NOT EXIST "%$WD%\2_USER_Profiles_Complete.txt" echo 2. Users, cleanup local users
+IF NOT EXIST "%$WD%\3_Scheduled_Task_Complete.txt" echo 3. Scheduled Task, cleanup
+IF NOT EXIST "%$WD%\4_Winddows_Update_Complete.txt" echo 4. Windows Update
+IF NOT EXIST "%$WD%\5_Disk_Check_Complete.txt" echo 5. Disk Check, for dirty bit
+IF NOT EXIST "%$WD%\6_Disk_CleanMGR_Complete.txt" echo 6. CleanMgr, run disk cleanup
+IF NOT EXIST "%$WD%\7_Final_Reboot_Complete.txt" echo 7. Final reboot, in preperation for running SysPrep
 echo 8. SysPrep
 echo.
 Timeout /T %$TIMEOUT%
@@ -139,28 +145,41 @@ Timeout /T %$TIMEOUT%
 :Param
 	::	Default User
 	SET $PARAMETER1=%~1
-	IF DEFINED $PARAMETER1 echo %$CUSTOM_USER%> "%$WD%\var\var_Parameter-1.txt"
+	IF DEFINED $PARAMETER1 echo %$PARAMETER1%> "%$WD%\var\var_Parameter-1.txt"
 	IF NOT DEFINED $PARAMETER1 IF EXIST "%$WD%\var\var_Parameter-1.txt" SET /P $PARAMETER1= < "%$WD%\var\var_Parameter-1.txt"
 	IF NOT DEFINED $PARAMETER1 GoTo skipParam
 	SET $CUSTOM_USER=%$PARAMETER1%
 	::	Timeout
 	SET $PARAMETER2=%~2
-	IF DEFINED $PARAMETER2 echo %$TIMEOUT%> "%$WD%\var\var_Parameter-2.txt"
+	IF DEFINED $PARAMETER2 echo %$PARAMETER2%> "%$WD%\var\var_Parameter-2.txt"
 	IF NOT DEFINED $PARAMETER2 IF EXIST "%$WD%\var\var_Parameter-2.txt" SET /P $PARAMETER2= < "%$WD%\var\var_Parameter-2.txt"
 	IF NOT DEFINED $PARAMETER2 GoTo skipParam
 	SET $TIMEOUT=%$PARAMETER2%
 	::	Unattend.xml Cleanup
 	SET $PARAMETER3=%~3
-	IF DEFINED $PARAMETER3 echo %UNATTEND_CLEAN%> "%$WD%\var\var_Parameter-3.txt"
+	IF DEFINED $PARAMETER3 echo %$PARAMETER3%> "%$WD%\var\var_Parameter-3.txt"
 	IF NOT DEFINED $PARAMETER3 IF EXIST "%$WD%\var\var_Parameter-3.txt" SET /P $PARAMETER3= < "%$WD%\var\var_Parameter-3.txt"
 	IF NOT DEFINED $PARAMETER3 GoTo skipParam
-	SET UNATTEND_CLEAN=%$PARAMETER3%
-	::	DelProf2 Path
+	SET $UNATTEND_CLEAN=%$PARAMETER3%
+	echo %$UNATTEND_CLEAN%> "%$WD%\var\var_Parameter-3.txt"
+	::	Unattend file to seed
 	SET $PARAMETER4=%~4
-	IF DEFINED $PARAMETER4 echo %$DELPROF2_PATH%> "%$WD%\var\var_Parameter-4.txt" 
+	IF DEFINED $PARAMETER4 echo %$PARAMETER4%> "%$WD%\var\var_Parameter-4.txt" 
 	IF NOT DEFINED $PARAMETER4 IF EXIST "%$WD%\var\var_Parameter-4.txt" SET /P $PARAMETER4= < "%$WD%\var\var_Parameter-4.txt" 
 	IF NOT DEFINED $PARAMETER4 GoTo skipParam
-	SET $DELPROF2_PATH=%$PARAMETER4%
+	SET $Unattend_FILE=%$PARAMETER4%
+	::	Unattend directory
+	SET $PARAMETER5=%~5
+	IF DEFINED $PARAMETER5 echo %$PARAMETER5%> "%$WD%\var\var_Parameter-5.txt" 
+	IF NOT DEFINED $PARAMETER5 IF EXIST "%$WD%\var\var_Parameter-5.txt" SET /P $PARAMETER5= < "%$WD%\var\var_Parameter-5.txt" 
+	IF NOT DEFINED $PARAMETER5 GoTo skipParam
+	SET $UNATTEND_DIR=%$PARAMETER5%
+	::	DelProf2 Path
+	SET $PARAMETER6=%~6
+	IF DEFINED $PARAMETER6 echo %$PARAMETER6%> "%$WD%\var\var_Parameter-6.txt" 
+	IF NOT DEFINED $PARAMETER6 IF EXIST "%$WD%\var\var_Parameter-6.txt" SET /P $PARAMETER6= < "%$WD%\var\var_Parameter-6.txt" 
+	IF NOT DEFINED $PARAMETER6 GoTo skipParam
+	SET $DELPROF2_PATH=%$PARAMETER6%
 :skipParam
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -170,15 +189,17 @@ Timeout /T %$TIMEOUT%
 
 :start
 	IF EXIST "%$WD%\%$MODULE_LOG%" Goto skipStart
-	echo %DATE% %TIME% Start... >> "%$WD%\%$MODULE_LOG%"
-	echo Script Version: %$SCRIPT_VERSION% >> "%$WD%\%$MODULE_LOG%"
-	echo script Build: %$SCRIPT_BUILD% >> "%$WD%\%$MODULE_LOG%"
-	echo Computer: %COMPUTERNAME% >> "%$WD%\%$MODULE_LOG%"
-	echo $CUSTOM_USER: %$CUSTOM_USER% >> "%$WD%\%$MODULE_LOG%"
-	echo $TIMEOUT: %$TIMEOUT% >> "%$WD%\%$MODULE_LOG%"
-	echo $UNATTEND_CLEAN: %$UNATTEND_CLEAN% >> "%$WD%\%$MODULE_LOG%"
-	echo $DELPROF2_PATH: %$DELPROF2_PATH% >> "%$WD%\%$MODULE_LOG%"
-	echo Active session... >> "%$WD%\%$MODULE_LOG%"
+	echo [INFO]	%DATE% %TIME% Start... >> "%$WD%\%$MODULE_LOG%"
+	echo [INFO]	Script Version: %$SCRIPT_VERSION% >> "%$WD%\%$MODULE_LOG%"
+	echo [DEBUG]	script Build: %$SCRIPT_BUILD% >> "%$WD%\%$MODULE_LOG%"
+	echo [INFO]	Computer: %COMPUTERNAME% >> "%$WD%\%$MODULE_LOG%"
+	echo [DEBUG]	$CUSTOM_USER: %$CUSTOM_USER% >> "%$WD%\%$MODULE_LOG%"
+	echo [DEBUG]	$TIMEOUT: %$TIMEOUT% >> "%$WD%\%$MODULE_LOG%"
+	echo [DEBUG]	$UNATTEND_CLEAN: %$UNATTEND_CLEAN% >> "%$WD%\%$MODULE_LOG%"
+	echo [DEBUG]	$UNATTEND_FILE: %$Unattend_FILE% >> "%$WD%\%$MODULE_LOG%"
+	echo [DEBUG]	$UNATTEND_DIR: %$UNATTEND_DIR% >> "%$WD%\%$MODULE_LOG%"
+	echo [DEBUG]	$DELPROF2_PATH: %$DELPROF2_PATH% >> "%$WD%\%$MODULE_LOG%"
+	echo [INFO]	Active session... >> "%$WD%\%$MODULE_LOG%"
 :skipStart
 
 ::	Volume
@@ -223,7 +244,7 @@ Timeout /T %$TIMEOUT%
 	NET USER >> "%$WD%\1_Administrator_Complete.txt"
 	NET LOCALGROUP Administrators >> "%$WD%\1_Administrator_Complete.txt"
 	NET USER Administrator >> "%$WD%\1_Administrator_Complete.txt"
-	NET USER %$CUSTOM_USER% /Active:No
+	NET USER %$CUSTOM_USER% /Active:No 2> nul
 	Timeout /T %$TIMEOUT%
 	::	no need to logoff if already logged in as Administrator
 	IF "%USERNAME%"=="Administrator" GoTo skipAdmin
@@ -242,13 +263,14 @@ Timeout /T %$TIMEOUT%
 	CALL :banner
 	IF EXIST "%$WD%\2_USER_Profiles_Complete.txt" GoTo skipUPC
 	echo Processing User Profile cleanup...
+	IF NOT DEFINED $PARAMETER6 SET $DELPROF2_PATH=%$VOLUME%\%$DELPROF2_PATH%
 	::	prefer where launched
-	IF NOT EXIST "%SYSTEMROOT%\System32\delprof2.exe" Robocopy "%$VOLUME%\%$DELPROF2_PATH%" "%SYSTEMROOT%\System32" delprof2.exe /r:1 /w:2
-	IF EXIST "%$VOLUME%\%$DELPROF2_PATH%" (CD /D "%$VOLUME%\%$DELPROF2_PATH%") ELSE (cd /D "%SYSTEMROOT%\System32")
-	delprof2 /l
-	delprof2 /u /i /ed:admin*
+	IF NOT EXIST "%SYSTEMROOT%\System32\delprof2.exe" Robocopy "%$DELPROF2_PATH%" "%SYSTEMROOT%\System32" delprof2.exe /r:1 /w:2
+	IF EXIST "%$DELPROF2_PATH%" (CD /D "%$DELPROF2_PATH%") ELSE (cd /D "%SYSTEMROOT%\System32")
+	delprof2 /l 2> nul
+	delprof2 /u /i /ed:admin* 2> nul
 	CALL :banner
-	delprof2 /l
+	delprof2 /l 2> nul
 	rem In case delprof fails, do it manaully
 	FIND /I "%$CUSTOM_USER%" "%$WD%\Local_Users.txt" && (NET USER %$CUSTOM_USER% /DELETE) && (IF EXIST "%SYSTEMDRIVE%\Users\%$CUSTOM_USER%" RD /S /Q "%SYSTEMDRIVE%\Users\%$CUSTOM_USER%")
 	FIND /I "defaultuser0" "%$WD%\Local_Users.txt" && (NET USER defaultuser0 /DELETE) && (IF EXIST "%SYSTEMDRIVE%\Users\defaultuser0" RD /S /Q "%SYSTEMDRIVE%\Users\defaultuser0")
@@ -375,13 +397,13 @@ Timeout /T %$TIMEOUT%
 	openfiles 1> nul 2> nul
 	SET $ADMIN_STATUS=%ERRORLEVEL%
 	IF %$ADMIN_STATUS% NEQ 0 GoTo sysprepE
-	echo SysPrep activation %DATE% %TIME% >> "%$WD%\%$MODULE_LOG%"
-	echo End. >> "%$WD%\%$MODULE_LOG%"
+	echo [INFO]	SysPrep activation %DATE% %TIME% >> "%$WD%\%$MODULE_LOG%"
+	echo [INFO]	End. >> "%$WD%\%$MODULE_LOG%"
 	robocopy "%$WD%" "%SystemRoot%\System32\SysPrep\%$SCRIPT_NAME%\%$ISO_DATE%" /MOVE /S /E /R:1 /W:2
 	IF EXIST "%SystemRoot%\System32\SysPrep\Panther" RD /S /Q "%SystemRoot%\System32\SysPrep\Panther"
 :UC
 	echo Checking on Unattend.xml cleanup...
-	IF %$UNATTEND_CLEAN% EQU 0 GoTo skipUC
+	IF /I "%$UNATTEND_CLEAN%"=="No" GoTo skipUC
 	(REG QUERY "HKEY_LOCAL_MACHINE\System\Setup\UnattendFile" 2> nul) && (REG DELETE "HKEY_LOCAL_MACHINE\System\Setup\UnattendFile" /VA /f)
 	IF EXIST "%WINDIR%\Panther\Unattend\Unattend.xml" DEL /F /Q "%WINDIR%\Panther\Unattend\Unattend.xml"
 	IF EXIST "%WINDIR%\Panther\Unattend\Autounattend.xml" DEL /F /Q "%WINDIR%\Panther\Unattend\Autounattend.xml"
@@ -390,6 +412,17 @@ Timeout /T %$TIMEOUT%
 	IF EXIST "%SYSTEMDRIVE%\unattend.xml" DEL /F /Q "%SYSTEMDRIVE%\unattend.xml"
 	IF EXIST "%SYSTEMDRIVE%\Autounattend.xml" DEL /F /Q "%SYSTEMDRIVE%\Autounattend.xml"
 :skipUC
+
+:US
+	::	Unattend seed
+	IF %$Unattend_FILE% EQU 0 GoTo skipUS
+	echo Seeding unattend.xml file...
+	IF DEFINED $Unattend_FILE IF NOT EXIST "%SystemRoot%\Panther\Unattend" MD "%SystemRoot%\Panther\Unattend"
+	DEL /Q /F "%SystemRoot%\Panther\Unattend\*"
+	IF DEFINED $Unattend_FILE copy /Y "%$UNATTEND_DIR%\%$Unattend_FILE%" "%SystemRoot%\Panther\Unattend"
+	IF NOT "%$Unattend_FILE%"=="unattend.xml" RENAME "%SystemRoot%\Panther\Unattend\%$Unattend_FILE%" "unattend.xml"
+:skipUS
+
 	:: Needs to run with Administrative privilege
 	CALL :banner
 	echo Running SysPrep...
