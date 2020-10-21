@@ -50,7 +50,7 @@ Flash drive friendly
 
 - [Delprof2](https://helgeklein.com/free-tools/delprof2-user-profile-deletion-tool/)
 	- Useful tool that does a complete job. Better than Powershell:
-	- `*Get-CimInstance -Class Win32_UserProfile | Where-Object { $_.LocalPath.split('\')[-1] -eq 'UserA' } | Remove-CimInstance*`
+	- `Get-CimInstance -Class Win32_UserProfile | Where-Object { $_.LocalPath.split('\')[-1] -eq 'UserA' } | Remove-CimInstance`
 		- which leaves the user account on the system!
 
 #### Passing Paramters
