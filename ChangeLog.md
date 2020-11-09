@@ -19,12 +19,40 @@
 
 ---
 
+## Version 1.4.0 (2020-11-09)
+#### Added
+- $DEFAULT_USER which is first time log in user; will resort to manual delete if need be.
+
+### Changed
+- Order of the parameters
+- Order of variables in commandlet
+- Default is to cleanup unattend files and cache
+
+#### Fixed
+- Readme typos
+
+---
+
+## Version 1.3.0 (2020-09-28)
+#### Added
+- variable $Unattend_FILE
+- Parameter for $Unattend_FILE
+- variable for $UNATTEND_DIR
+- Parameter for $UNATTEND_DIR
+- log tags
+
+### Changed
+- Console output for what will run
+- $Unattend_Clean to Yes or No (instead of 0 or 1)
+
+#### Fixed
+- output if default user doesn't exist for disable
+- Delprof2 path based to parameter6
+
 ## Version 1.2.1 (2020-09-25)
 ### Changed
 - Step 1 log-off to reboot to flush custom user profile
 
-
----
 
 ## Version 1.2.0 (2020-09-24)
 ### Added

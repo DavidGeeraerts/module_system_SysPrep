@@ -1,0 +1,5 @@
+# Ignore files
+
+module_system_SysPrep_dev.cmd
+*.backup
+*.old
