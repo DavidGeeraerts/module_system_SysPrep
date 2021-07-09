@@ -1,7 +1,7 @@
 # module_system_SysPrep
 
 
-## Description
+### Description
 
 Automated processing of SysPrep.
 Likes to be on a [USB] flash drive; can run from other local storage.
@@ -13,7 +13,7 @@ Can download just the commandlet:
 [Download](https://raw.githubusercontent.com/DavidGeeraerts/module_system_SysPrep/main/module_system_SysPrep.cmd) --right-click and "Save Link as..."
 
 
-### Process List
+## Process List
 
 1. Administrator, local configuration
 
@@ -32,7 +32,7 @@ Can download just the commandlet:
 8. SysPrep
 
 
-#### Instructions
+### Instructions
 
 Flash drive friendly
 
@@ -50,7 +50,7 @@ Flash drive friendly
 
 - [Delprof2](https://helgeklein.com/free-tools/delprof2-user-profile-deletion-tool/)
 	- Useful tool that does a complete job. Better than Powershell:
-	- *Get-CimInstance -Class Win32_UserProfile | Where-Object { $_.LocalPath.split('\')[-1] -eq 'UserA' } | Remove-CimInstance*
+	- *`Get-CimInstance -Class Win32_UserProfile | Where-Object { $_.LocalPath.split('\')[-1] -eq 'UserA' } | Remove-CimInstance`*
 		- which leaves the user account on the system!
 
 #### Passing Paramters

@@ -23,8 +23,8 @@ SETLOCAL Enableextensions
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=1.4.0
-SET $SCRIPT_BUILD=20201109-0830
+SET $SCRIPT_VERSION=1.5.0
+SET $SCRIPT_BUILD=20210709-1000
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -144,12 +144,12 @@ Timeout /T %$TIMEOUT%
 
 :Param
 
-	::	Timeout
+	::	Default User
 	SET $PARAMETER1=%~1
 	IF DEFINED $PARAMETER1 echo %$PARAMETER1%> "%$WD%\var\var_Parameter-1.txt"
 	IF NOT DEFINED $PARAMETER1 IF EXIST "%$WD%\var\var_Parameter-1.txt" SET /P $PARAMETER1= < "%$WD%\var\var_Parameter-1.txt"
 	IF NOT DEFINED $PARAMETER1 GoTo skipParam
-	SET $TIMEOUT=%$PARAMETER1%
+	SET $CUSTOM_USER=%$PARAMETER1%
 	::	Unattend.xml Cleanup
 	SET $PARAMETER2=%~2
 	IF DEFINED $PARAMETER2 echo %$PARAMETER3%> "%$WD%\var\var_Parameter-2.txt"
@@ -169,12 +169,12 @@ Timeout /T %$TIMEOUT%
 	IF NOT DEFINED $PARAMETER4 IF EXIST "%$WD%\var\var_Parameter-4.txt" SET /P $PARAMETER4= < "%$WD%\var\var_Parameter-4.txt" 
 	IF NOT DEFINED $PARAMETER4 GoTo skipParam
 	SET $Unattend_FILE=%$PARAMETER4%
-	::	Default User
+	::	Timeout
 	SET $PARAMETER5=%~5
 	IF DEFINED $PARAMETER5 echo %$PARAMETER5%> "%$WD%\var\var_Parameter-5.txt"
 	IF NOT DEFINED $PARAMETER5 IF EXIST "%$WD%\var\var_Parameter-5.txt" SET /P $PARAMETER5= < "%$WD%\var\var_Parameter-5.txt"
 	IF NOT DEFINED $PARAMETER5 GoTo skipParam
-	SET $CUSTOM_USER=%$PARAMETER5%	
+	SET $TIMEOUT=%$PARAMETER5%
 	::	DelProf2 Path
 	SET $PARAMETER6=%~6
 	IF DEFINED $PARAMETER6 echo %$PARAMETER6%> "%$WD%\var\var_Parameter-6.txt" 

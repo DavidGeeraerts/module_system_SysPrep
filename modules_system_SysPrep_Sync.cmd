@@ -44,7 +44,7 @@ color 0B
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :: Repository Locations
-SET "$REPO_MODULES=D:\Projects\Script Code\modules\module_system_SysPrep"
+SET "$REPO_MODULE=D:\Projects\Script Code\modules\module_system_SysPrep"
 SET "$REPO_UNATTEND=D:\Projects\Script Code\Windows Post-Flight"
 
 
@@ -79,7 +79,7 @@ ECHO.
 
 :sync
 	attrib -A /S
-	robocopy "%$REPO_MODULE%" "%$VOLUME%\module_system_SysPrep" /A+:A /MIR /S /E /R:1 /W:5 /XD .git /XF *.old modules_system_SysPrep_Sync.cmd .gitignore
+	robocopy "%$REPO_MODULE%" "%$VOLUME%\module_system_SysPrep" /A+:A /MIR /S /E /R:1 /W:5 /XD .git /XF *.old modules_system_SysPrep_Sync.cmd .gitignore CODEOWNERS *.backup
 	robocopy "%$REPO_UNATTEND%" %$VOLUME%\Unattend *unattend.xml /A+:A /R:1 /W:5
 	IF %ERRORLEVEL% EQU 0 GoTo skipU
 :skipU

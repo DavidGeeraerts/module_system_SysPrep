@@ -19,9 +19,17 @@
 
 ---
 
+## Version 1.5.0 (2021-07-09)
+### Changed
+- Order of the parameters: Customer User is now Param #1
+
+---
+
+
 ## Version 1.4.0 (2020-11-09)
 #### Added
 - $DEFAULT_USER which is first time log in user; will resort to manual delete if need be.
+- Sync tool for Flash drives
 
 ### Changed
 - Order of the parameters
@@ -31,7 +39,6 @@
 #### Fixed
 - Readme typos
 
----
 
 ## Version 1.3.0 (2020-09-28)
 #### Added
