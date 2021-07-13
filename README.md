@@ -59,9 +59,10 @@ Flash drive friendly
 - cd /D to module directory where module_system_SysPrep.cmd
 - parameters are seperated by a space; use double quotes if parameter has a space: *"parameter with space"*
 
-1. Paramter 1 (`$TIMEOUT`)
-	- Seconds
-	- Console screen timeout. Default is 10 seconds
+1. Parameter 1 (`$CUSTOM_USER`)
+	- String
+	- The user configured in the unattend.xml file
+	- User should be deleted by default, but may require more aggresive actions.
 
 2. Paramter 2 (`$UNATTEND_CLEAN`)
 	- {No,Yes} Default is Yes
@@ -77,11 +78,10 @@ Flash drive friendly
 	- Unattend file name to seed; default is unattend.xml
 	- can be set to 0 to bypass, otherwise if defined the unattend file will be seeded
 
-5. Parameter 5 (`$CUSTOM_USER`)
-	- String
-	- The user configured in the unattend.xml file
-	- User should be deleted by default, but may require more aggresive actions.
-
+5. Paramter 5 (`$TIMEOUT`)
+	- Seconds
+	- Console screen timeout. Default is 10 seconds
+	
 6. Paramter 6 (`$DELPROF2_PATH`)
 	- Directory path
 	- Where delprof2.exe resides in relation to the volume where the module is run from
