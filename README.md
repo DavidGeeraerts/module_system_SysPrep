@@ -99,6 +99,7 @@ Example:
 
 ##### Notes
 
+- Looks for APX packages that are known to break SysPrep
 - [Microsoft has deprecated the GUI for SysPrep since Windows 8.1](https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/sysprep--system-preparation--overview) 
 - SysPrep must be run with administrative privilege  
 - module_system_SysPrep logs will be saved here for archive:

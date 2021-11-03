@@ -19,12 +19,35 @@
 
 ---
 
-## Version 1.5.0 (2021-07-09)
+## Version 1.6.0 (2021-11-03)
+#### Added
+- Windows build information
+- switch for unattend use file
+- Windows recon info
+- Imaging tool and auto generate image name
+- time stamps to logs
+- APX sub-routines for APX removal that break Sysprep
+- Error catching
+- panther folder copied to log folder
+
 ### Changed
-- Order of the parameters: Customer User is now Param #1
+- Default timeout to 5 sec 
+- name to default user
+- Logging names and variables
+- How flash drive is handled
+- banner
+- log formatting
+- Logging happens where program is executed.
+
+### Removed
+- Auto start for script
 
 ---
 
+
+## Version 1.5.0 (2021-07-09)
+### Changed
+- Order of the parameters: Customer User is now Param #1
 
 ## Version 1.4.0 (2020-11-09)
 #### Added

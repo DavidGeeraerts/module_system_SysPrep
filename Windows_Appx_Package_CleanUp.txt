@@ -1,0 +1,15 @@
+# This must be done right before running sysprep
+## Needs to be performed for local administrator
+Get-AppxPackage Microsoft.OneDriveSync | Remove-AppxPackage
+Get-AppxPackage MicrosoftWindows.Client.WebExperience | Remove-AppxPackage
+
+
+# Get package full name
+@powershell Get-AppxPackage Microsoft.OneDriveSync | FIND /I "PackageFullName"
+@powershell Remove-AppxPackage <$PackageFullName>
+
+@powershell Get-AppxPackage MicrosoftWindows.Client.WebExperience | FIND /I "PackageFullName"
+
+FOR /F "tokens=3 delims= " %P IN ('@powershell Get-AppxPackage MicrosoftWindows.Client.WebExperience ^| FIND /I "PackageFullName"') DO SET $PACKAGE_NAME=%P
+
+@powershell Remove-AppxPackage %$PACKAGE_NAME%
