@@ -19,6 +19,20 @@
 
 ---
 
+## Version 2.0.0 (2021-11-08)
+#### Added
+- properties file
+- check for properties schema meeting minimum requirement
+
+#### Fixed
+- missing Windows update check
+
+#### Removed
+- parameters for individual variables.
+
+---
+
+
 ## Version 1.6.0 (2021-11-03)
 #### Added
 - Windows build information
@@ -41,9 +55,6 @@
 
 ### Removed
 - Auto start for script
-
----
-
 
 ## Version 1.5.0 (2021-07-09)
 ### Changed

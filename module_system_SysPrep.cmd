@@ -1,3 +1,7 @@
+:: Title ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::	module system SysPrep
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Author:		David Geeraerts
 :: Location:	Olympia, Washington USA
@@ -23,15 +27,13 @@
 ::	https://docs.microsoft.com/en-us/windows/release-health/windows11-release-information
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+:: Initialize the shell :::::::::::::::::::::::::::::::::::::::::::::::::::::::
 @echo Off
 SETLOCAL Enableextensions
-:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=1.6.0
-SET $SCRIPT_BUILD=20211103-1030
+SET $SCRIPT_VERSION=2.0.0
+SET $SCRIPT_BUILD=20211108-1035
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -40,8 +42,15 @@ color 4E
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 ::###########################################################################::
-:: Declare Global variables
+:: Declare Global variables [Defaults]
 ::###########################################################################::
+
+:: Default properties file name
+SET $CONFIG_FILE=module_system_SysPrep.properties
+
+::	Minimum properties file schema version
+::	DO NOT MODIFY
+SET $CONFIG_SCHEMA_VERSION_MIN=1.0.0
 
 :: Timeout (seconds)
 SET $TIMEOUT=5
@@ -106,7 +115,11 @@ SET $IMAGE_TYPE=Base
 	:: Start Time Start Date
 	SET $START_TIME=%Time%
 	SET $START_DATE=%Date%
-	
+
+:param	
+	:: Capture Parameter 1 for properties file
+	SET $PARAMETER1=%~1
+
 :dir
 
 	::	Volume
@@ -117,7 +130,7 @@ SET $IMAGE_TYPE=Base
 	SET $VOLUME=%~d1
 	SET "$WD=%$VOLUME%
 	:: Not to use the root system, instead revert to Public directory  
-	if %$VOLUME%==%SystemDrive% SET $WD=%PUBLIC%\%$LD%
+	if %$VOLUME%==%SystemDrive% SET $WD=%PUBLIC%\%$SCRIPT_NAME%
 	if not exist %$WD% MD %$WD%
 	CD /D "%$WD%"
 	:: Directory Checks
@@ -151,6 +164,99 @@ IF %$BANNER% EQU 1 GoTo :EOF
 SET $BANNER=1
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+
+:: Configuration File :::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+:Param
+	::	Properties file as a parameter
+	IF DEFINED $PARAMETER1 echo %$PARAMETER1%> "%$VD%\Parameter-1.txt"
+	IF NOT DEFINED $PARAMETER1 IF EXIST "%$VD%\Parameter-1.txt" SET /P $PARAMETER1= < "%$VD%\Parameter-1.txt"
+	IF NOT DEFINED $PARAMETER1 GoTo skipParam
+	SET $CONFIG_FILE=%$PARAMETER1%
+:skipParam
+
+IF NOT EXIST %~dp0\%CONFIG_FILE% GoTo skipCF
+SET "$STEP_DESCRIP=Reading properties file"
+CALL :banner
+echo Reading properties file...
+:: CHECK the Config file Schema version meets the minimum requirement
+SET $CONFIG_FILE_SCHEMA_CHECK=0
+SET $CONFIG_FILE_SCHEMA_CHECK_MINOR=0
+::	Get the schema version from the properties file
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$CONFIG_SCHEMA_VERSION" "%~dp0\%$CONFIG_FILE%"') DO SET "$CONFIG_SCHEMA_VERSION=%%V"
+
+::  Parse schema version from configuration file
+::		Revision number should never effect parsing ability, no check.
+FOR /F "tokens=1 delims=." %%V IN ("%$CONFIG_SCHEMA_VERSION%") DO SET $CONFIG_SCHEMA_VERSION_MAJOR=%%V
+FOR /F "tokens=2 delims=." %%V IN ("%$CONFIG_SCHEMA_VERSION%") DO SET $CONFIG_SCHEMA_VERSION_MINOR=%%V
+::	Parse minimum schema version necessary to load properties
+FOR /F "tokens=1 delims=." %%V IN ("%$CONFIG_SCHEMA_VERSION_MIN%") DO SET $CONFIG_SCHEMA_VERSION_MIN_MAJOR=%%V
+FOR /F "tokens=2 delims=." %%V IN ("%$CONFIG_SCHEMA_VERSION_MIN%") DO SET $CONFIG_SCHEMA_VERSION_MIN_MINOR=%%V
+
+::  actual check
+IF %$CONFIG_SCHEMA_VERSION_MAJOR% GEQ %$CONFIG_SCHEMA_VERSION_MIN_MAJOR% (SET $CONFIG_FILE_SCHEMA_CHECK=1)
+IF %$CONFIG_SCHEMA_VERSION_MINOR% GEQ %$CONFIG_SCHEMA_VERSION_MIN_MINOR% (SET $CONFIG_FILE_SCHEMA_CHECK_MINOR=1)
+:: skip loading the properties file if it doesn't meet the minimum schema.
+IF %$CONFIG_FILE_SCHEMA_CHECK% EQU 0 GoTo skipCF
+
+::	NOTES :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+REM Any configuration variable being pulled from the configuration file that is using another variable
+REM needs to be reset so as not to take the string from the configuration file literally.
+REM This solves the problem when build in variables are used such as %PROGRAMDATA%
+REM EXAMPLE: FOR /F %%R IN ('ECHO %$VARIABLE%') DO SET $VARIABLE=%%R
+REM FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$VARIABLE" "%~dp0\%CONFIG_FILE_NAME%"') DO SET "$VARIABLE=%%V"
+REM FOR /F %%R IN ('ECHO %VARIABLE%') DO SET $VARIABLE=%%R
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+:: LOADING PROPERTIES
+::	Timeout
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$TIMEOUT" "%~dp0\%$CONFIG_FILE%"') DO SET "$TIMEOUT=%%V"
+echo $TIMEOUT: %$TIMEOUT%
+::	Use unattend.xml for sysprep
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$UNATTEND_USE" "%~dp0\%$CONFIG_FILE%"') DO SET "$UNATTEND_USE=%%V"
+echo $UNATTEND_USE: %$UNATTEND_USE%
+::	Cleanup unattend after SysPrep
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$UNATTEND_CLEAN" "%~dp0\%$CONFIG_FILE%"') DO SET "$UNATTEND_CLEAN=%%V"
+echo $UNATTEND_CLEAN: %$UNATTEND_CLEAN%
+::	Folder name to store unattend xml files
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$UNATTEND_DIR" "%~dp0\%$CONFIG_FILE%"') DO SET "$UNATTEND_DIR=%%V"
+echo $UNATTEND_DIR: %$UNATTEND_DIR%
+::	Unattend.xml file name
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$UNATTEND_FILE" "%~dp0\%$CONFIG_FILE%"') DO SET "$UNATTEND_FILE=%%V"
+echo $UNATTEND_FILE: %$UNATTEND_FILE%
+:: Default user from unattend.xml file
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$DEFAULT_USER" "%~dp0\%$CONFIG_FILE%"') DO SET "$DEFAULT_USER=%%V"
+echo $DEFAULT_USER: %$DEFAULT_USER%
+::	where to find DelProf2 from working directory
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$DELPROF2_PATH" "%~dp0\%$CONFIG_FILE%"') DO SET "$DELPROF2_PATH=%%V"
+echo $DELPROF2_PATH: %$DELPROF2_PATH%
+::	where to store logs from the working directory
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$LD" "%~dp0\%$CONFIG_FILE%"') DO SET "$LD=%%V"
+echo $LD: %$LD%
+::	module log file for session
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$MODULE_LOG" "%~dp0\%$CONFIG_FILE%"') DO SET "$MODULE_LOG=%%V"
+FOR /F %%R IN ('ECHO %$MODULE_LOG%') DO SET $MODULE_LOG=%%R
+echo $MODULE_LOG: %$MODULE_LOG%
+:: Use Image server Information
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$IMAGE_USE" "%~dp0\%$CONFIG_FILE%"') DO SET "$IMAGE_USE=%%V"
+echo $IMAGE_USE: %$IMAGE_USE%
+::	Image server directory
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$IMAGE_DIRECTORY" "%~dp0\%$CONFIG_FILE%"') DO SET "$IMAGE_DIRECTORY=%%V"
+FOR /F %%R IN ('ECHO %$IMAGE_DIRECTORY%') DO SET $IMAGE_DIRECTORY=%%R
+echo $IMAGE_DIRECTORY: %$IMAGE_DIRECTORY%
+:: File name for image server
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$IMAGE_FILE" "%~dp0\%$CONFIG_FILE%"') DO SET "$IMAGE_FILE=%%V"
+echo $IMAGE_FILE: %$IMAGE_FILE%
+::	Image Server image type
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$IMAGE_TYPE" "%~dp0\%$CONFIG_FILE%"') DO SET "$IMAGE_TYPE=%%V"
+echo $IMAGE_TYPE: %$IMAGE_TYPE%
+echo End properties file parsing.
+Timeout /T %$TIMEOUT%
+
+:skipCF
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+call :banner
 echo Preparing to run the following:
 echo.
 IF NOT EXIST "%$LD%\0_DEFAULT_USER_Complete.txt" echo 0. Logged on user flush
@@ -182,49 +288,7 @@ Timeout /T %$TIMEOUT%
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-:Param
 
-	::	Default User
-	REM this is broken since $VOLUME is using PARAM1: Call :get-volume %$PATH%
-	SET $PARAMETER1=%~1
-	:: Workaround set it back to orignal variable
-	SET $PARAMETER1=%$DEFAULT_USER%
-	IF DEFINED $PARAMETER1 echo %$PARAMETER1%> "%$VD%\var_Parameter-1.txt"
-	IF NOT DEFINED $PARAMETER1 IF EXIST "%$VD%\var_Parameter-1.txt" SET /P $PARAMETER1= < "%$VD%\var_Parameter-1.txt"
-	IF NOT DEFINED $PARAMETER1 GoTo skipParam
-	SET $DEFAULT_USER=%$PARAMETER1%
-	::	Unattend.xml Cleanup
-	SET $PARAMETER2=%~2
-	IF DEFINED $PARAMETER2 echo %$PARAMETER3%> "%$VD%\var_Parameter-2.txt"
-	IF NOT DEFINED $PARAMETER2 IF EXIST "%$VD%\var_Parameter-2.txt" SET /P $PARAMETER3= < "%$VD%\var_Parameter-2.txt"
-	IF NOT DEFINED $PARAMETER2 GoTo skipParam
-	SET $UNATTEND_CLEAN=%$PARAMETER2%
-	echo %$UNATTEND_CLEAN%> "%$VD%\var_Parameter-2.txt"
-	::	Unattend directory
-	SET $PARAMETER3=%~3
-	IF DEFINED $PARAMETER3 echo %$PARAMETER3%> "%$VD%\var_Parameter-3.txt" 
-	IF NOT DEFINED $PARAMETER3 IF EXIST "%$VD%\var_Parameter-3.txt" SET /P $PARAMETER3= < "%$VD%\var_Parameter-3.txt" 
-	IF NOT DEFINED $PARAMETER3 GoTo skipParam
-	SET $UNATTEND_DIR=%$PARAMETER3%	
-	::	Unattend file to seed
-	SET $PARAMETER4=%~4
-	IF DEFINED $PARAMETER4 echo %$PARAMETER4%> "%$VD%\var_Parameter-4.txt" 
-	IF NOT DEFINED $PARAMETER4 IF EXIST "%$VD%\var_Parameter-4.txt" SET /P $PARAMETER4= < "%$VD%\var_Parameter-4.txt" 
-	IF NOT DEFINED $PARAMETER4 GoTo skipParam
-	SET $Unattend_FILE=%$PARAMETER4%
-	::	Timeout
-	SET $PARAMETER5=%~5
-	IF DEFINED $PARAMETER5 echo %$PARAMETER5%> "%$VD%\var_Parameter-5.txt"
-	IF NOT DEFINED $PARAMETER5 IF EXIST "%$VD%\var_Parameter-5.txt" SET /P $PARAMETER5= < "%$VD%\var_Parameter-5.txt"
-	IF NOT DEFINED $PARAMETER5 GoTo skipParam
-	SET $TIMEOUT=%$PARAMETER5%
-	::	DelProf2 Path
-	SET $PARAMETER6=%~6
-	IF DEFINED $PARAMETER6 echo %$PARAMETER6%> "%$VD%\var_Parameter-6.txt" 
-	IF NOT DEFINED $PARAMETER6 IF EXIST "%$VD%\var_Parameter-6.txt" SET /P $PARAMETER6= < "%$VD%\var_Parameter-6.txt" 
-	IF NOT DEFINED $PARAMETER6 GoTo skipParam
-	SET $DELPROF2_PATH=%$PARAMETER6%
-:skipParam
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -236,9 +300,15 @@ Timeout /T %$TIMEOUT%
 	:: Parse Windows OS to elements
 	FOR /F "skip=1 tokens=3 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "ProductName"') DO SET $OS=%%P
 	FOR /F "skip=1 tokens=4 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "ProductName"') DO SET $OS_MAJOR=%%P
+	if %$OS_MAJOR%=="Server" FOR /F "skip=1 tokens=5 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "ProductName"') DO SET $OS_MAJOR=%%P
 	FOR /F "skip=1 tokens=3 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "EditionID"') DO SET $OS_EDITION=%%P
 	FOR /F "tokens=2 delims==" %%P IN ('wmic os GET CAPTION /VALUE') DO SET $OS_CAPTION=%%P
-	FOR /F "skip=1 tokens=3 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "DisplayVersion"') DO SET $OS_DISPLAY_VERSION=%%P
+	::	Use ReleaseID if server
+	::	{Client, Server}
+	FOR /F "skip=1 tokens=3 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "InstallationType"') DO SET $OS_INSTALLATION_TYPE=%%P
+	if %$OS_INSTALLATION_TYPE%==Server (for /F "skip=1 tokens=3 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "ReleaseId"') DO SET $OS_DISPLAY_VERSION=%%P) ELSE ( 
+		FOR /F "skip=1 tokens=3 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "DisplayVersion"') DO SET $OS_DISPLAY_VERSION=%%P
+	)
 	FOR /F "tokens=2 delims==" %%P IN ('wmic os GET BUILDNUMBER /VALUE') DO SET $OS_BUILDNUMBER=%%P
 	FOR /F "tokens=4 delims=[] " %%P IN ('ver') DO SET $OS_VERSION=%%P
 	FOR /F "tokens=4 delims=.]" %%P IN ('ver') DO SET $OS_BUILD_REVISION=%%P
@@ -251,11 +321,13 @@ Timeout /T %$TIMEOUT%
 :start
 	IF EXIST "%$LD%\%$MODULE_LOG%" Goto skipStart
 	echo %TIME% [INFO]	%DATE% Start... >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [INFO]	$Script Name: %$SCRIPT_NAME% >> "%$LD%\%$MODULE_LOG%"
+	echo %TIME% [INFO]	Script Name: %$SCRIPT_NAME% >> "%$LD%\%$MODULE_LOG%"
 	echo %TIME% [INFO]	Script Version: %$SCRIPT_VERSION% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [DEBUG]	script Build: %$SCRIPT_BUILD% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [DEBUG]	Working directory: %$WD% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [INFO]	Computer: %COMPUTERNAME% >> "%$LD%\%$MODULE_LOG%"
+	echo %TIME% [DEBUG]	Script Build: %$SCRIPT_BUILD% >> "%$LD%\%$MODULE_LOG%"
+	echo %TIME% [INFO]	Computer: %COMPUTERNAME% >> "%$LD%\%$MODULE_LOG%"	
+	echo %TIME% [DEBUG]	Working directory [$WD]: %$WD% >> "%$LD%\%$MODULE_LOG%"
+	echo %TIME% [DEBUG]	Log directory [$LD]: %$LD% >> "%$LD%\%$MODULE_LOG%"
+	echo %TIME% [DEBUG]	Var directory [$VD]: %$VD% >> "%$LD%\%$MODULE_LOG%"
 	echo %TIME% [DEBUG]	$DEFAULT_USER: %$DEFAULT_USER% >> "%$LD%\%$MODULE_LOG%"
 	echo %TIME% [DEBUG]	$TIMEOUT: %$TIMEOUT% >> "%$LD%\%$MODULE_LOG%"
 	echo %TIME% [DEBUG]	$UNATTEND_USE: %$UNATTEND_USE% >> "%$LD%\%$MODULE_LOG%"
@@ -394,6 +466,7 @@ REM This would need to be a scheduled task to run as an administrator
 	SET	$STEP_NUM=4
 	SET "$STEP_DESCRIP=Windows Update"
 	CALL :banner
+	IF EXIST "%$LD%\4_Winddows_Update_Complete.txt" GoTo skipWU
 	echo Processing Windows Updates...
 	@powershell Get-WindowsUpdate 2> nul
 	IF %ERRORLEVEL% EQU 0 GoTo jumpWU
@@ -416,7 +489,7 @@ REM This would need to be a scheduled task to run as an administrator
 	echo %TIME% [INFO]	4_Winddows_Update_Complete! >> "%$LD%\%$MODULE_LOG%"
 	echo Done.
 	Timeout /T %$TIMEOUT%
-	
+:skipWU
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 ::	#5
@@ -448,7 +521,8 @@ REM This would need to be a scheduled task to run as an administrator
 	IF %$CLEANER_STATUS% EQU 0 GoTo jumpCS
 	CLEANMGR /SAGESET:100
 	Timeout /T %$TIMEOUT%
-:jumpCS	
+:jumpCS
+	echo Processing disk cleanup...
 	CLEANMGR /SAGERUN:100
 	echo %DATE% %TIME% > "%$LD%\6_Disk_CleanMGR_Complete.txt"
 	echo %TIME% [INFO]	6_Disk_CleanMGR_Complete! >> "%$LD%\%$MODULE_LOG%"
@@ -489,7 +563,7 @@ REM This would need to be a scheduled task to run as an administrator
 	openfiles 1> nul 2> nul
 	SET $ADMIN_STATUS=%ERRORLEVEL%
 	IF %$ADMIN_STATUS% NEQ 0 GoTo sysprepE
-	echo %TIME% [INFO]	SysPrep activation %DATE% %TIME% >> "%$LD%\%$MODULE_LOG%"
+	echo %TIME% [INFO]	SysPrep activation! >> "%$LD%\%$MODULE_LOG%"
 
 	::	Logging from executed location as of version 1.6.0
 	::robocopy "%$LD%" "%SystemRoot%\System32\SysPrep\%$SCRIPT_NAME%\%$ISO_DATE%" /MOVE /S /E /R:1 /W:2
@@ -525,17 +599,20 @@ REM This would need to be a scheduled task to run as an administrator
 	IF %$IMAGE_USE% EQU 1 echo %TIME% [INFO]	Image Name: %$IMAGE_NAME% >> "%$LD%\%$MODULE_LOG%"
 	echo Running SysPrep...
 	CD /D "%SystemRoot%\System32\SysPrep"
-	if %$UNATTEND_USE% EQU 1 (sysprep /oobe /generalize /unattend:%$Unattend_FILE% /shutdown) ELSE (
-		sysprep /oobe /generalize /shutdown
+	if %$UNATTEND_USE% EQU 1 (@sysprep /oobe /generalize /unattend:%$Unattend_FILE% /shutdown) ELSE (
+		@sysprep /oobe /generalize /shutdown
 		)
 	SET %$SYSPREP_ERROR%=%ERRORLEVEL%
+	echo %TIME% [DEBUG]	$SYSPREP_ERROR: %$SYSPREP_ERROR% >> "%$LD%\%$MODULE_LOG%"
 	if exist "%$LD%\8_SysPrep_Running.txt" DEL /F /Q "%$LD%\8_SysPrep_Running.txt"
 	echo %DATE% %TIME% > "%$LD%\8_SysPrep_Complete.txt"
 	echo %TIME% [INFO]	8_SysPrep_Complete! >> "%$LD%\%$MODULE_LOG%"
+	robocopy "%$LD%" "%$LD%\completed" *.txt /MOV /XF Local_Users.txt CloneZilla_Image.txt /R:1 /W:2
 	robocopy "%WINDIR%\System32\Sysprep\Panther" "%$LD%\Panther" /S /E /R:1 /W:2 /NP
 	if exist "%WINDIR%\System32\Sysprep\Panther\setuperr.txt" GoTo sysprepE1
 	::IF %$SYSPREP_ERROR% NEQ 0 PAUSE
-	GoTo End
+	GoTo end
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -573,7 +650,7 @@ REM This would need to be a scheduled task to run as an administrator
 	::	since Windows 11
 	::	Microsoft.OneDriveSync
 	::	Current logged on user
-	
+	echo %TIME% [INFO]	AppxPackage Cleanup... >> "%$LD%\%$MODULE_LOG%"
 	echo %TIME% [INFO]	Current User: %USERNAME% >> "%$LD%\%$MODULE_LOG%"
 	SET $PACKAGE_NAME=
 	FOR /F "tokens=3 delims= " %%P IN ('@powershell Get-AppxPackage Microsoft.OneDriveSync ^| FIND /I "PackageFullName"') DO SET $PACKAGE_NAME=%%P
@@ -598,7 +675,7 @@ REM This would need to be a scheduled task to run as an administrator
 	GoTo :eof
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-:End
-echo %TIME% [INFO]	End. >> "%$LD%\%$MODULE_LOG%"
+:end
+if exist "%$LD%\8_SysPrep_Complete.txt" echo %TIME% [INFO]	End. >> "%$LD%\%$MODULE_LOG%"
 ENDLOCAL
 Exit

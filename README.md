@@ -5,6 +5,7 @@
 
 Automated processing of SysPrep.
 Likes to be on a [USB] flash drive; can run from other local storage.
+Log files will be stored where the program was executed from.
 
 
 ### Download
@@ -14,6 +15,8 @@ Can download just the commandlet:
 
 
 ## Process List
+
+0. Flush logged on user --usually the default user.
 
 1. Administrator, local configuration
 
@@ -34,16 +37,16 @@ Can download just the commandlet:
 
 ### Instructions
 
-Flash drive friendly
+Best practice is to use external storage such as a USB Flash drive.
 
 - Manually run module\_system\_SysPrep with administrative privilege
-	- Pass any parameters in order, each subsequent parameter is dependent on the previous parameter being passed.
-	- meaning, if you want PARAMETER6, you have to pass all the parameters 1-5
+	- Pass the config file name as a parameter.
+	- default `module_system_SysPrep.properties`
 - First run will configure the local administrator and log out current user, which should be the unattend.xml first logon user.
 - Log in with local Administrator account --no password 
 - CleanMgr will prompt if SAGE 100 is not set
 - Final Reboot will reboot and auto-login Administrator
-- Manually run module_system_SysPrep with privilege
+- Manually run module_system_SysPrep with admin privilege for the final SysPrep run.
 
 
 #### Dependencies
@@ -53,53 +56,22 @@ Flash drive friendly
 	- *`Get-CimInstance -Class Win32_UserProfile | Where-Object { $_.LocalPath.split('\')[-1] -eq 'UserA' } | Remove-CimInstance`*
 		- which leaves the user account on the system!
 
-#### Passing Paramters
+#### Passing Config file as Paramter
 
 - Open shell/terminal with administrative privilege
 - cd /D to module directory where module_system_SysPrep.cmd
-- parameters are seperated by a space; use double quotes if parameter has a space: *"parameter with space"*
-
-1. Parameter 1 (`$CUSTOM_USER`)
-	- String
-	- The user configured in the unattend.xml file
-	- User should be deleted by default, but may require more aggresive actions.
-
-2. Paramter 2 (`$UNATTEND_CLEAN`)
-	- {No,Yes} Default is Yes
-	- Clean up all the unattend.xml files from the systemdrive before running SysPrep
-	- Useful for cleanup if seeding unattend.xml file
-	- will flush Windows cache for unattend.xml/Autounattend.xml
-
-3. Paramter 3 (`$UNATTEND_DIR`)
-	- Full path to the directory
-	- defualt is Unattend (i.e. <Volume>:\Unattend)
-
-4. Parameter 4 (`$Unattend_FILE`)
-	- Unattend file name to seed; default is unattend.xml
-	- can be set to 0 to bypass, otherwise if defined the unattend file will be seeded
-
-5. Paramter 5 (`$TIMEOUT`)
-	- Seconds
-	- Console screen timeout. Default is 10 seconds
-	
-6. Paramter 6 (`$DELPROF2_PATH`)
-	- Directory path
-	- Where delprof2.exe resides in relation to the volume where the module is run from
-	- By default, Flash Drive Root\Tools
-
+- Pass config file name if not the default `module_system_SysPrep.properties`
+- Can have different properties files for different systems, then just pass the [custom] properties file as a parameter.
 
 
 Example:
 
-- *`module_system_SysPrep.cmd Paramter1 Paramter2 Paramter3 Paramter4 Paramter5 Paramter6`*
+- `module_system_SysPrep.cmd` `Custom.config`
 
-- *`module_system_SysPrep.cmd UnattendUser 10 1 SysPrep_unattned.xml Unattend Tools`*
 
-**Parameters only need to be passed once for the session, as they are cached.**
+##### Notes (recent to old)
 
-##### Notes
-
-- Looks for APX packages that are known to break SysPrep
+- Looks for APX packages that are known to break SysPrep in Window 11
 - [Microsoft has deprecated the GUI for SysPrep since Windows 8.1](https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/sysprep--system-preparation--overview) 
 - SysPrep must be run with administrative privilege  
 - module_system_SysPrep logs will be saved here for archive:
