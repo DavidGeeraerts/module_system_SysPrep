@@ -19,6 +19,16 @@
 
 ---
 
+## Version 2.0.1 (2021-11-22)
+#### Fixed
+- properties file check
+
+#### Changed
+- var to cache
+
+---
+
+
 ## Version 2.0.0 (2021-11-08)
 #### Added
 - properties file
@@ -29,8 +39,6 @@
 
 #### Removed
 - parameters for individual variables.
-
----
 
 
 ## Version 1.6.0 (2021-11-03)

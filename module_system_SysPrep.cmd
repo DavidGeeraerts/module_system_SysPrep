@@ -32,8 +32,8 @@
 @echo Off
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=2.0.0
-SET $SCRIPT_BUILD=20211108-1035
+SET $SCRIPT_VERSION=2.0.1
+SET $SCRIPT_BUILD=20211122-0800
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -93,6 +93,9 @@ SET $LD=logs
 ::	Module log
 SET $MODULE_LOG=%$SCRIPT_NAME%_%COMPUTERNAME%.log
 
+:: Cache directory
+SET $CACHE=cache
+
 ::	Image Information
 ::		No [0] Yes [1]
 SET $IMAGE_USE=1
@@ -134,8 +137,10 @@ SET $IMAGE_TYPE=Base
 	if not exist %$WD% MD %$WD%
 	CD /D "%$WD%"
 	:: Directory Checks
-	IF NOT EXIST "%$WD%\var\%COMPUTERNAME%" MD "%$WD%\var\%COMPUTERNAME%"
-	SET "$VD=%$WD%\var\%COMPUTERNAME%"
+	::	cache
+	IF NOT EXIST "%$WD%\%$CACHE%\%COMPUTERNAME%" MD "%$WD%\%$CACHE%\%COMPUTERNAME%"
+	SET "$VD=%$WD%\%$CACHE%\%COMPUTERNAME%"
+	:: log
 	IF NOT EXIST "%$WD%\%$LD%\%COMPUTERNAME%" MD "%$WD%\%$LD%\%COMPUTERNAME%"
 	SET "$LD=%$WD%\%$LD%\%COMPUTERNAME%"
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -175,7 +180,7 @@ SET $BANNER=1
 	SET $CONFIG_FILE=%$PARAMETER1%
 :skipParam
 
-IF NOT EXIST %~dp0\%CONFIG_FILE% GoTo skipCF
+IF NOT EXIST "%~dp0\%$CONFIG_FILE%" GoTo skipCF
 SET "$STEP_DESCRIP=Reading properties file"
 CALL :banner
 echo Reading properties file...
