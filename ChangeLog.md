@@ -19,14 +19,20 @@
 
 ---
 
+## Version 2.0.2 (2022-01-12)
+#### Fixed
+- needing to reset log path after reading properties file
+
+
+---
+
+
 ## Version 2.0.1 (2021-11-22)
 #### Fixed
 - properties file check
 
 #### Changed
 - var to cache
-
----
 
 
 ## Version 2.0.0 (2021-11-08)

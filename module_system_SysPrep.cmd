@@ -32,8 +32,8 @@
 @echo Off
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=2.0.1
-SET $SCRIPT_BUILD=20211122-0800
+SET $SCRIPT_VERSION=2.0.2
+SET $SCRIPT_BUILD=20220112
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -147,7 +147,7 @@ SET $IMAGE_TYPE=Base
 
 SET $BANNER=0
 SET $STEP_NUM=0
-SET "$STEP_DESCRIP=Preperations"
+SET $STEP_DESCRIP=Preperations
 
 :banner
 cls
@@ -260,6 +260,13 @@ Timeout /T %$TIMEOUT%
 
 :skipCF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+::::	log	:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: Update log path after reading config file
+SET "$LD=%$WD%\%$LD%\%COMPUTERNAME%" 
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 
 call :banner
 echo Preparing to run the following:
