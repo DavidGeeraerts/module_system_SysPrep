@@ -19,12 +19,17 @@
 
 ---
 
-## Version 2.0.2 (2022-01-12)
-#### Fixed
-- needing to reset log path after reading properties file
+## Version 2.1.0 (2022-02-11)
+#### Added
+- APX package remove for default user
 
 
 ---
+
+
+## Version 2.0.2 (2022-01-12)
+#### Fixed
+- needing to reset log path after reading properties file
 
 
 ## Version 2.0.1 (2021-11-22)

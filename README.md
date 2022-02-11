@@ -1,41 +1,41 @@
-# module_system_SysPrep
+# :arrows_clockwise: module_system_SysPrep
 
 
-### Description
+### :page_with_curl: Description
 
 Automated processing of SysPrep.
 Likes to be on a [USB] flash drive; can run from other local storage.
 Log files will be stored where the program was executed from.
 
 
-### Download
+### :arrow_down: Download
 
 Can download just the commandlet:
 [Download](https://raw.githubusercontent.com/DavidGeeraerts/module_system_SysPrep/main/module_system_SysPrep.cmd) --right-click and "Save Link as..."
 
 
-## Process List
+## :white_check_mark: Process List
 
-0. Flush logged on user --usually the default user.
+:zero: Flush logged on user --usually the default user.
 
-1. Administrator, local configuration
+:one: Administrator, local configuration
 
-2. Users, cleanup local users
+:two: Users, cleanup local users
 
-3. Scheduled Task, cleanup
+:three: Scheduled Task, cleanup
 
-4. Windows Update
+:four: Windows Update
 
-5. Disk Check, for dirty bit
+:five: Disk Check, for dirty bit
 
-6. CleanMgr, run disk cleanup
+:six: CleanMgr, run disk cleanup
 
-7. Final reboot, in preparation for running SysPrep
+:seven: Final reboot, in preparation for running SysPrep
 
-8. SysPrep
+:eight: SysPrep
 
 
-### Instructions
+### :green_book: Instructions
 
 Best practice is to use external storage such as a USB Flash drive.
 
@@ -49,14 +49,14 @@ Best practice is to use external storage such as a USB Flash drive.
 - Manually run module_system_SysPrep with admin privilege for the final SysPrep run.
 
 
-#### Dependencies
+#### :orange_book: Dependencies
 
 - [Delprof2](https://helgeklein.com/free-tools/delprof2-user-profile-deletion-tool/)
 	- Useful tool that does a complete job. Better than Powershell:
 	- *`Get-CimInstance -Class Win32_UserProfile | Where-Object { $_.LocalPath.split('\')[-1] -eq 'UserA' } | Remove-CimInstance`*
 		- which leaves the user account on the system!
 
-#### Passing Config file as Paramter
+#### :incoming_envelope: Passing Config file as Paramter
 
 - Open shell/terminal with administrative privilege
 - cd /D to module directory where module_system_SysPrep.cmd
@@ -69,7 +69,7 @@ Example:
 - `module_system_SysPrep.cmd` `Custom.config`
 
 
-##### Notes (recent to old)
+##### :notebook: Notes (recent to old)
 
 - Looks for APX packages that are known to break SysPrep in Window 11
 - [Microsoft has deprecated the GUI for SysPrep since Windows 8.1](https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/sysprep--system-preparation--overview) 

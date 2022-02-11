@@ -8,6 +8,14 @@ Get-AppxPackage MicrosoftWindows.Client.WebExperience | Remove-AppxPackage
 @powershell Get-AppxPackage Microsoft.OneDriveSync | FIND /I "PackageFullName"
 @powershell Remove-AppxPackage <$PackageFullName>
 
+
+FOR /F "tokens=3 delims= " %P IN ('@powershell Get-AppxPackage Microsoft.OneDriveSync ^| FIND /I "PackageFullName"') DO SET $PACKAGE_NAME=%P
+
+@powershell Remove-AppxPackage -AllUsers -Package %$PACKAGE_NAME%
+
+
+
+
 @powershell Get-AppxPackage MicrosoftWindows.Client.WebExperience | FIND /I "PackageFullName"
 
 FOR /F "tokens=3 delims= " %P IN ('@powershell Get-AppxPackage MicrosoftWindows.Client.WebExperience ^| FIND /I "PackageFullName"') DO SET $PACKAGE_NAME=%P

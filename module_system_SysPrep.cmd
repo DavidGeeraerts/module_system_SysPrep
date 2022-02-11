@@ -32,8 +32,8 @@
 @echo Off
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=2.0.2
-SET $SCRIPT_BUILD=20220112
+SET $SCRIPT_VERSION=2.1.0
+SET $SCRIPT_BUILD=20220211 0930
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -393,7 +393,9 @@ REM This would need to be a scheduled task to run as an administrator
 	SET "$STEP_DESCRIP=Flush logged on user"
 	CALL :banner
 	IF EXIST "%$LD%\0_DEFAULT_USER_Complete.txt" GoTo skipDU
-
+	:: remove APX packages that break sysprep
+	call :subAPX
+	
 :skipDU
 
 ::	#1
@@ -668,7 +670,7 @@ REM This would need to be a scheduled task to run as an administrator
 	FOR /F "tokens=3 delims= " %%P IN ('@powershell Get-AppxPackage Microsoft.OneDriveSync ^| FIND /I "PackageFullName"') DO SET $PACKAGE_NAME=%%P
 	echo %TIME% [DEBUG]	$PACKAGE_NAME: %$PACKAGE_NAME% >> "%$LD%\%$MODULE_LOG%"
 	IF NOT DEFINED $PACKAGE_NAME GoTo skipAPX1
-	@powershell Remove-AppxPackage %$PACKAGE_NAME% 2> nul
+	@powershell Remove-AppxPackage -Package %$PACKAGE_NAME% 2> nul
 	:skipAPX1
 	::	MicrosoftWindows.Client.WebExperience
 	SET $PACKAGE_NAME=
