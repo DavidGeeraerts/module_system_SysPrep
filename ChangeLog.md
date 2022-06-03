@@ -19,12 +19,20 @@
 
 ---
 
-## Version 2.1.0 (2022-02-11)
+## Version 2.2.0 (2022-06-03)
 #### Added
-- APX package remove for default user
+- Bitlocker check and unlocker
+
+#### Fixed
+- Windows APPX package for local admin stoping sysprep
 
 
 ---
+
+
+## Version 2.1.0 (2022-02-11)
+#### Added
+- APX package remove for default user
 
 
 ## Version 2.0.2 (2022-01-12)

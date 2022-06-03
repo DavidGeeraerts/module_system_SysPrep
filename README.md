@@ -30,9 +30,13 @@ Can download just the commandlet:
 
 :six: CleanMgr, run disk cleanup
 
-:seven: Final reboot, in preparation for running SysPrep
+:seven: Bitlocker check
 
-:eight: SysPrep
+:eight: Final reboot, in preparation for running SysPrep
+
+:nine: Windows APPX Packages
+
+:ten: SysPrep
 
 
 ### :green_book: Instructions
@@ -71,7 +75,7 @@ Example:
 
 ##### :notebook: Notes (recent to old)
 
-- Looks for APX packages that are known to break SysPrep in Window 11
+- Looks for APPX packages that are known to break SysPrep in Window 11
 - [Microsoft has deprecated the GUI for SysPrep since Windows 8.1](https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/sysprep--system-preparation--overview) 
 - SysPrep must be run with administrative privilege  
 - module_system_SysPrep logs will be saved here for archive:

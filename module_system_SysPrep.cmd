@@ -32,8 +32,8 @@
 @echo Off
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=2.1.0
-SET $SCRIPT_BUILD=20220211 0930
+SET $SCRIPT_VERSION=2.2.0
+SET $SCRIPT_BUILD=20220603 1030
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -278,8 +278,10 @@ IF NOT EXIST "%$LD%\3_Scheduled_Task_Complete.txt" echo 3. Scheduled Task, clean
 IF NOT EXIST "%$LD%\4_Winddows_Update_Complete.txt" echo 4. Windows Update
 IF NOT EXIST "%$LD%\5_Disk_Check_Complete.txt" echo 5. Disk Check, for dirty bit
 IF NOT EXIST "%$LD%\6_Disk_CleanMGR_Complete.txt" echo 6. CleanMgr, run disk cleanup
-IF NOT EXIST "%$LD%\7_Final_Reboot_Complete.txt" echo 7. Final reboot, in preperation for running SysPrep
-echo 8. SysPrep
+IF NOT EXIST "%$LD%\7_BitLocker_Complete.txt" echo 7. BitLocker, turn off
+IF NOT EXIST "%$LD%\8_Final_Reboot_Complete.txt" echo 8. Final reboot, in preperation for running SysPrep
+IF NOT EXIST "%$LD%\9_Windows_APPX_Complete.txt" echo 9. Windows APPX Packages
+echo 10. SysPrep
 echo.
 Timeout /T %$TIMEOUT%
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -382,8 +384,10 @@ REM This would need to be a scheduled task to run as an administrator
 	IF NOT EXIST "%$LD%\4_Winddows_Update_Complete.txt" GoTo WU
 	IF NOT EXIST "%$LD%\5_Disk_Check_Complete.txt" GoTo fdc
 	IF NOT EXIST "%$LD%\6_Disk_CleanMGR_Complete.txt" GoTo CM
-	IF NOT EXIST "%$LD%\7_Final_Reboot_Complete.txt" GoTo FB
-	IF NOT EXIST "%$LD%\8_SysPrep_Running.txt" GoTo sysprep
+	IF NOT EXIST "%$LD%\7_BitLocker_Complete.txt" GoTo BL
+	IF NOT EXIST "%$LD%\8_Final_Reboot_Complete.txt" GoTo FB
+	IF NOT EXIST "%$LD%\9_Windows_APPX_Complete.txt" GoTo WAPX
+	IF NOT EXIST "%$LD%\10_SysPrep_Running.txt" GoTo sysprep
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 ::	#0
@@ -546,16 +550,48 @@ REM This would need to be a scheduled task to run as an administrator
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 ::	#7
+::	Bitlocker check
+:BL
+	SET	$STEP_NUM=7
+	SET "$STEP_DESCRIP=BitLocker Check"
+	CALL :banner
+	IF EXIST "%$LD%\7_BitLocker_Complete.txt" GoTo skipBL	
+	echo Checking on Bitlocker, it must not be enable for SysPrep...
+	Manage-bde.exe -status %SYSTEMDRIVE% > "%$VD%\Bitlocker.txt"
+	FIND /I "Percentage Encrypted:" "%$VD%\Bitlocker.txt" > "%$VD%\Bitlocker_E.txt"
+	FIND /I "Protection Status:" "%$VD%\Bitlocker.txt" > "%$VD%\Bitlocker_Status.txt"
+	SET $BITLOCKER=0
+	FIND /I "Percentage Encrypted: 0.0%" "%$VD%\Bitlocker_E.txt" 2>nul || SET $BITLOCKER=1
+	FIND /I "Protection On" "%$VD%\Bitlocker_Status.txt" && SET $BITLOCKER=1
+	FIND /I "Encryption in Progress" "%$VD%\Bitlocker.txt" 2>nul && SET $BITLOCKER=1
+	IF %$BITLOCKER% EQU 0 GoTo skipBLS
+	Manage-bde.exe -off %SYSTEMDRIVE%
+	echo Bitlocker is being turned off, disk decryption in process...
+	:BLS
+	CALL :banner
+	echo Bitlocker is being turned off, disk decryption in process...
+	echo.
+	Manage-bde.exe -status %SYSTEMDRIVE%
+	Manage-bde.exe -status %SYSTEMDRIVE% | FIND /I "Fully Decrypted" 2>nul && GoTo skipBLS
+	timeout /t 15
+	GoTo BLS
+	:skipBLS
+	echo %DATE% %TIME% > "%$LD%\7_BitLocker_Complete.txt"
+	echo %TIME% [INFO]	7_BitLocker_Complete! >> "%$LD%\%$MODULE_LOG%"
+:skipBL	
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+::	#8
 ::	Final reboot
 :FB
-	SET	$STEP_NUM=7
+	SET	$STEP_NUM=8
 	SET "$STEP_DESCRIP=Final reboot, in preperation for running SysPrep"
 	CALL :banner
-	IF EXIST "%$LD%\7_Final_Reboot_Complete.txt" GoTo skipFB
+	IF EXIST "%$LD%\8_Final_Reboot_Complete.txt" GoTo skipFB
 	echo Processing final reboot...
 	DEL /F /Q /S "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\module_system_SysPrep*" 2> nul
-	echo %DATE% %TIME% > "%$LD%\7_Final_Reboot_Complete.txt"
-	echo %TIME% [INFO]	7_Final_Reboot_Complete! >> "%$LD%\%$MODULE_LOG%"
+	echo %DATE% %TIME% > "%$LD%\8_Final_Reboot_Complete.txt"
+	echo %TIME% [INFO]	8_Final_Reboot_Complete! >> "%$LD%\%$MODULE_LOG%"
 	shutdown /R /T 5 /f /c "Final Shutdown for SysPrep."
 	echo Done.
 	::	remove from startup
@@ -564,21 +600,42 @@ REM This would need to be a scheduled task to run as an administrator
 :skipFB
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-::	#8
+
+::	#9
+::	Windows APPX Packages, for local Administrator
+:WAPX
+	SET	$STEP_NUM=9
+	SET "$STEP_DESCRIP=Windows APPX package cleanup"
+	:: Needs to run with Administrative privilege
+	call :banner
+	if exist "%$LD%\9_Windows_APPX_Complete.txt" GoTo skipWAPX
+	echo Processing Windows APPX packages...
+	call :subAPX
+	echo %DATE% %TIME% > "%$LD%\9_Windows_APPX_Complete.txt"
+	echo %TIME% [INFO]	9_Windows_APPX_Complete! >> "%$LD%\%$MODULE_LOG%"
+:skipWAPX
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+::	#10
 ::	SysPrep
 :sysprep
-	SET	$STEP_NUM=8
+	SET	$STEP_NUM=10
 	SET "$STEP_DESCRIP=SysPrep"
 	CALL :banner
 	echo Processing SysPrep...
 	Timeout /T %$TIMEOUT%
-	if exist "%$LD%\8_SysPrep_Running.txt" GoTo sysprepE1
-	echo %DATE% %TIME% > "%$LD%\8_SysPrep_Running.txt"
+	if exist "%$LD%\10_SysPrep_Running.txt" GoTo sysprepE1
+	echo %DATE% %TIME% > "%$LD%\10_SysPrep_Running.txt"
 	openfiles 1> nul 2> nul
 	SET $ADMIN_STATUS=%ERRORLEVEL%
 	IF %$ADMIN_STATUS% NEQ 0 GoTo sysprepE
 	echo %TIME% [INFO]	SysPrep activation! >> "%$LD%\%$MODULE_LOG%"
 
+	IF %$IMAGE_USE% EQU 1 call :subIU
+	IF %$IMAGE_USE% EQU 1 set /P $IMAGE_NAME= < "%$IMAGE_DIRECTORY%\%$IMAGE_FILE%"
+	IF %$IMAGE_USE% EQU 1 echo %TIME% [INFO]	Image Name: %$IMAGE_NAME% >> "%$LD%\%$MODULE_LOG%"
+	
 	::	Logging from executed location as of version 1.6.0
 	::robocopy "%$LD%" "%SystemRoot%\System32\SysPrep\%$SCRIPT_NAME%\%$ISO_DATE%" /MOVE /S /E /R:1 /W:2
 	:: Clean up Panther folder
@@ -605,12 +662,7 @@ REM This would need to be a scheduled task to run as an administrator
 	IF NOT "%$Unattend_FILE%"=="unattend.xml" RENAME "%SystemRoot%\Panther\Unattend\%$Unattend_FILE%" "unattend.xml"
 :skipUS
 
-	:: Needs to run with Administrative privilege
-	call :banner
-	call :subAPX
-	IF %$IMAGE_USE% EQU 1 call :subIU
-	IF %$IMAGE_USE% EQU 1 set /P $IMAGE_NAME= < "%$IMAGE_DIRECTORY%\%$IMAGE_FILE%"
-	IF %$IMAGE_USE% EQU 1 echo %TIME% [INFO]	Image Name: %$IMAGE_NAME% >> "%$LD%\%$MODULE_LOG%"
+
 	echo Running SysPrep...
 	CD /D "%SystemRoot%\System32\SysPrep"
 	if %$UNATTEND_USE% EQU 1 (@sysprep /oobe /generalize /unattend:%$Unattend_FILE% /shutdown) ELSE (
@@ -618,9 +670,9 @@ REM This would need to be a scheduled task to run as an administrator
 		)
 	SET %$SYSPREP_ERROR%=%ERRORLEVEL%
 	echo %TIME% [DEBUG]	$SYSPREP_ERROR: %$SYSPREP_ERROR% >> "%$LD%\%$MODULE_LOG%"
-	if exist "%$LD%\8_SysPrep_Running.txt" DEL /F /Q "%$LD%\8_SysPrep_Running.txt"
-	echo %DATE% %TIME% > "%$LD%\8_SysPrep_Complete.txt"
-	echo %TIME% [INFO]	8_SysPrep_Complete! >> "%$LD%\%$MODULE_LOG%"
+	if exist "%$LD%\10_SysPrep_Running.txt" DEL /F /Q "%$LD%\10_SysPrep_Running.txt"
+	echo %DATE% %TIME% > "%$LD%\10_SysPrep_Complete.txt"
+	echo %TIME% [INFO]	10_SysPrep_Complete! >> "%$LD%\%$MODULE_LOG%"
 	robocopy "%$LD%" "%$LD%\completed" *.txt /MOV /XF Local_Users.txt CloneZilla_Image.txt /R:1 /W:2
 	robocopy "%WINDIR%\System32\Sysprep\Panther" "%$LD%\Panther" /S /E /R:1 /W:2 /NP
 	if exist "%WINDIR%\System32\Sysprep\Panther\setuperr.txt" GoTo sysprepE1
@@ -649,7 +701,7 @@ REM This would need to be a scheduled task to run as an administrator
 	echo Check the sysprep error log!
 	@explorer "%WINDIR%\System32\Sysprep\Panther"
 	PAUSE
-	if exist "%$LD%\8_SysPrep_Running.txt" DEL /F /Q "%$LD%\8_SysPrep_Running.txt"
+	if exist "%$LD%\10_SysPrep_Running.txt" DEL /F /Q "%$LD%\10_SysPrep_Running.txt"
 	GoTo end
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -690,6 +742,6 @@ REM This would need to be a scheduled task to run as an administrator
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :end
-if exist "%$LD%\8_SysPrep_Complete.txt" echo %TIME% [INFO]	End. >> "%$LD%\%$MODULE_LOG%"
+if exist "%$LD%\10_SysPrep_Complete.txt" echo %TIME% [INFO]	End. >> "%$LD%\%$MODULE_LOG%"
 ENDLOCAL
 Exit
