@@ -19,15 +19,19 @@
 
 ---
 
+## Version 2.2.1 (2022-06-03)
+#### Fixed
+- Bitlocker check
+
+---
+
+
 ## Version 2.2.0 (2022-06-03)
 #### Added
 - Bitlocker check and unlocker
 
 #### Fixed
 - Windows APPX package for local admin stoping sysprep
-
-
----
 
 
 ## Version 2.1.0 (2022-02-11)

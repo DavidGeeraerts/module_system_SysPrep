@@ -32,8 +32,8 @@
 @echo Off
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=2.2.0
-SET $SCRIPT_BUILD=20220603 1030
+SET $SCRIPT_VERSION=2.2.1
+SET $SCRIPT_BUILD=20220603 1500
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -561,7 +561,7 @@ REM This would need to be a scheduled task to run as an administrator
 	FIND /I "Percentage Encrypted:" "%$VD%\Bitlocker.txt" > "%$VD%\Bitlocker_E.txt"
 	FIND /I "Protection Status:" "%$VD%\Bitlocker.txt" > "%$VD%\Bitlocker_Status.txt"
 	SET $BITLOCKER=0
-	FIND /I "Percentage Encrypted: 0.0%" "%$VD%\Bitlocker_E.txt" 2>nul || SET $BITLOCKER=1
+	FIND /I "Percentage Encrypted: 0.0" "%$VD%\Bitlocker_E.txt" 2>nul || SET $BITLOCKER=1
 	FIND /I "Protection On" "%$VD%\Bitlocker_Status.txt" && SET $BITLOCKER=1
 	FIND /I "Encryption in Progress" "%$VD%\Bitlocker.txt" 2>nul && SET $BITLOCKER=1
 	IF %$BITLOCKER% EQU 0 GoTo skipBLS
