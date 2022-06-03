@@ -16,27 +16,27 @@ Can download just the commandlet:
 
 ## :white_check_mark: Process List
 
-:zero: Flush logged on user --usually the default user.
+:zero::zero: Flush logged on user --usually the default user.
 
-:one: Administrator, local configuration
+:zero::one: Administrator, local configuration
 
-:two: Users, cleanup local users
+:zero::two: Users, cleanup local users
 
-:three: Scheduled Task, cleanup
+:zero::three: Scheduled Task, cleanup
 
-:four: Windows Update
+:zero::four: Windows Update
 
-:five: Disk Check, for dirty bit
+:zero::five: Disk Check, for dirty bit
 
-:six: CleanMgr, run disk cleanup
+:zero::six: CleanMgr, run disk cleanup
 
-:seven: Bitlocker check
+:zero::seven: Bitlocker check
 
-:eight: Final reboot, in preparation for running SysPrep
+:zero::eight: Final reboot, in preparation for running SysPrep
 
-:nine: Windows APPX Packages
+:zero::nine: Windows APPX Packages
 
-:ten: SysPrep
+:one::zero: SysPrep
 
 
 ### :green_book: Instructions
