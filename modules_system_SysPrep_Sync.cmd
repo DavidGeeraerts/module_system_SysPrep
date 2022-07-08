@@ -25,8 +25,8 @@ SETLOCAL Enableextensions
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 SET $SCRIPT_NAME=module_Flash_Sync
-SET $SCRIPT_VERSION=0.2.0
-SET $SCRIPT_BUILD=20201109-0800
+SET $SCRIPT_VERSION=0.3.0
+SET $SCRIPT_BUILD=20220708 0800
 
 Title %$SCRIPT_NAME% %$SCRIPT_VERSION%
 Prompt mrE$G
@@ -79,7 +79,7 @@ ECHO.
 
 :sync
 	attrib -A /S
-	robocopy "%$REPO_MODULE%" "%$VOLUME%\module_system_SysPrep" /A+:A /MIR /S /E /R:1 /W:5 /XD .git /XF *.old modules_system_SysPrep_Sync.cmd .gitignore CODEOWNERS *.backup
+	robocopy "%$REPO_MODULE%" "%$VOLUME%\module_system_SysPrep" /A+:A /MIR /S /E /R:1 /W:5 /XD .git /XF *.old modules_system_SysPrep_Sync.cmd modules_system_SysPrep_Sync_Dev.cmd .gitignore CODEOWNERS *.backup
 	robocopy "%$REPO_UNATTEND%" %$VOLUME%\Unattend *unattend.xml /A+:A /R:1 /W:5
 	IF %ERRORLEVEL% EQU 0 GoTo skipU
 :skipU

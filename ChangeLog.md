@@ -19,12 +19,19 @@
 
 ---
 
-## Version 2.2.1 (2022-06-03)
+## Version 2.2.2 (2022-07-08)
 #### Fixed
-- Bitlocker check
+- APPX with -AllUsers
+
+#### Changed
+- APPX package query goes to file
 
 ---
 
+
+## Version 2.2.1 (2022-06-03)
+#### Fixed
+- Bitlocker check
 
 ## Version 2.2.0 (2022-06-03)
 #### Added
