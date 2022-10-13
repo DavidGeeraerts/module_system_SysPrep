@@ -19,14 +19,18 @@
 
 ---
 
+## Version 2.2.3 (2022-10-10)
+#### Added
+- Check for APPX OneDrive Package and reset package variable due to truncation
+
+---
+
 ## Version 2.2.2 (2022-07-08)
 #### Fixed
 - APPX with -AllUsers
 
 #### Changed
 - APPX package query goes to file
-
----
 
 
 ## Version 2.2.1 (2022-06-03)

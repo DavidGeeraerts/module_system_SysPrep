@@ -32,8 +32,8 @@
 @echo Off
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=2.2.2
-SET $SCRIPT_BUILD=20220708 0800
+SET $SCRIPT_VERSION=2.2.3
+SET $SCRIPT_BUILD=20221013 1415
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -723,6 +723,9 @@ REM This would need to be a scheduled task to run as an administrator
 	SET /P $PACKAGE_NAME= < "%VD%\PackageFullName.txt"
 	echo %TIME% [DEBUG]	$PACKAGE_NAME: %$PACKAGE_NAME% >> "%$LD%\%$MODULE_LOG%"
 	IF NOT DEFINED $PACKAGE_NAME GoTo skipAPX1
+	REM temporary fix for Windows 11
+	echo Microsoft.OneDriveSync_21220.1024.5.0_neutral__8wekyb3d8bbwe | Find "%$PACKAGE_NAME%"
+	IF %ERRORLEVEL% EQU 0 SET $PACKAGE_NAME=Microsoft.OneDriveSync_21220.1024.5.0_neutral__8wekyb3d8bbwe
 	@powershell Remove-AppxPackage -AllUsers -Package %$PACKAGE_NAME% 2> nul
 	:skipAPX1
 	::	MicrosoftWindows.Client.WebExperience
