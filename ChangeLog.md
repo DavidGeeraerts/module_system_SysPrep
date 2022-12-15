@@ -19,11 +19,17 @@
 
 ---
 
+## Version 2.2.4 (2022-12-15)
+#### Added
+- check to skip Bitlocker if comman unavailble, such as on server.
+
+---
+
+
 ## Version 2.2.3 (2022-10-10)
 #### Added
 - Check for APPX OneDrive Package and reset package variable due to truncation
 
----
 
 ## Version 2.2.2 (2022-07-08)
 #### Fixed

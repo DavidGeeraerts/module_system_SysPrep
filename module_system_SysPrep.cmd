@@ -32,8 +32,8 @@
 @echo Off
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=2.2.3
-SET $SCRIPT_BUILD=20221013 1415
+SET $SCRIPT_VERSION=2.2.4
+SET $SCRIPT_BUILD=20221215 0730
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -557,6 +557,7 @@ REM This would need to be a scheduled task to run as an administrator
 	CALL :banner
 	IF EXIST "%$LD%\7_BitLocker_Complete.txt" GoTo skipBL	
 	echo Checking on Bitlocker, it must not be enable for SysPrep...
+	Manage-bde.exe -status 2> nul || GoTo skipBL
 	Manage-bde.exe -status %SYSTEMDRIVE% > "%$VD%\Bitlocker.txt"
 	FIND /I "Percentage Encrypted:" "%$VD%\Bitlocker.txt" > "%$VD%\Bitlocker_E.txt"
 	FIND /I "Protection Status:" "%$VD%\Bitlocker.txt" > "%$VD%\Bitlocker_Status.txt"
