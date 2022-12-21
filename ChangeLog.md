@@ -19,11 +19,16 @@
 
 ---
 
+## Version 2.2.5 (2022-12-21)
+#### Changed
+- check to skip Bitlocker if command unavailble, such as on server, using `where`.
+
+---
+
+
 ## Version 2.2.4 (2022-12-15)
 #### Added
 - check to skip Bitlocker if comman unavailble, such as on server.
-
----
 
 
 ## Version 2.2.3 (2022-10-10)
