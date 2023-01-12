@@ -1,4 +1,6 @@
-![Logo generated using Midjourney Image Generator https://www.midjourney.com]](/images/module_system_sysprep_logo.jpg)
+
+<img src="/images/module_system_sysprep_logo.jpg" alt="Logo generated using Midjourney Image Generator" title="module_system_sysprep logo" width="500" height="500"/>
+
 # :arrows_clockwise: module_system_SysPrep
 
 
