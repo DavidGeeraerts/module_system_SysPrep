@@ -1,4 +1,4 @@
-![Logo generated using Midjourney Image Generator https://www.midjourney.com]](./images/module_system_sysprep_logo.jpg)
+![Logo generated using Midjourney Image Generator https://www.midjourney.com]](/images/module_system_sysprep_logo.jpg)
 # :arrows_clockwise: module_system_SysPrep
 
 
