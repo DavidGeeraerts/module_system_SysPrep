@@ -1,3 +1,7 @@
+# Ignore Directories
+tools
+cache/*
+
 # Ignore files
 
 *_dev.cmd

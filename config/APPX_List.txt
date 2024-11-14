@@ -1,0 +1,10 @@
+Microsoft.Copilot
+Microsoft.WidgetsPlatformRuntime
+Microsoft.OneDriveSync
+MicrosoftWindows.Client.WebExperience
+Microsoft.BingNews
+Microsoft.YourPhone
+Microsoft.WindowsMaps
+Microsoft.ZuneMusic
+Microsoft.ZuneVideo
+AppUp.IntelGraphicsExperience

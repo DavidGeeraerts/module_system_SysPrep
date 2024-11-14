@@ -19,11 +19,24 @@
 
 ---
 
+## Version 3.0.0 (2024-11-13)
+
+#### Added
+
+#### Changed
+- minimum config file version now 3.0.0
+
+#### Fixed
+
+#### Deprecated
+- wmic command since it will be deprecated with Windows 11 24H2
+- Removed the use of DELProf2 to delete user profiles
+
+---
+
 ## Version 2.2.5 (2022-12-21)
 #### Changed
 - check to skip Bitlocker if command unavailble, such as on server, using `where`.
-
----
 
 
 ## Version 2.2.4 (2022-12-15)

@@ -1,7 +1,8 @@
 # This must be done right before running sysprep
 ## Needs to be performed for local administrator
-Get-AppxPackage Microsoft.OneDriveSync | Remove-AppxPackage -AllUsers
-Get-AppxPackage MicrosoftWindows.Client.WebExperience | Remove-AppxPackage -AllUsers
+Get-AppxPackage Microsoft.OneDriveSync -allusers | Remove-AppxPackage -AllUsers
+Get-AppxPackage MicrosoftWindows.Client.WebExperience -allusers | Remove-AppxPackage -AllUsers
+Get-AppxPackage AppUp.IntelGraphicsExperience -allusers | Remove-AppxPackage -AllUsers
 
 
 # Get package full name
