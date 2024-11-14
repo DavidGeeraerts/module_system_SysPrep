@@ -19,16 +19,21 @@
 
 ---
 
-## Version 3.0.1 (2024-11-14)
+## Version 3.0.2 (2024-11-14)
+#### Fixed
+- APPX Package removal
+- path to $APPX_LIST
 
+---
+
+
+## Version 3.0.1 (2024-11-14)
 #### Fixed
 - Ability to rerun APPX package removal
 - OS_Caption
 
----
 
 ## Version 3.0.0 (2024-11-14)
-
 #### Added
 - Rewrite of the entire program.
 - Interactive menu

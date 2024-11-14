@@ -32,8 +32,8 @@
 @echo Off
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=3.1.0
-SET $SCRIPT_BUILD=20241114 1000
+SET $SCRIPT_VERSION=3.0.2
+SET $SCRIPT_BUILD=20241114 1500
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -59,8 +59,8 @@ SET "$KEYWORD_SCHEDULED_TASK=OneDrive"
 
 :: [DELETE] Microsoft APPX Packages
 :: File that contains a list of APPX packages to delete using keywords
-:: relative file path
-SET $APPX_LIST=config\APPX_List.txt
+:: pathed to config
+SET $APPX_LIST=%~dp0\config\APPX_List.txt
 
 ::	Windows Update via powershell, KB exclusion
 	::	NotKBArticleID with space between KB's
@@ -542,17 +542,20 @@ GoTo Menu
 	echo Installed APPX packages: >> "%$CD%\%$PROCESS_4%"
 	@powershell Get-AppxPackage -allusers | Findstr /I /B "Name" | sort >> "%$CD%\%$PROCESS_4%"
 	IF exist "%$CD%\APPX_List_FullPackage.txt" (
-		type "%$CD%\APPX_List_FullPackage.txt" >> type "%$CD%\APPX_List_FullPackage.log"
-		del /Q "%$CD%\APPX_List_FullPackage.txt"
+		type "%$CD%\APPX_List_FullPackage.txt" >> "%$CD%\APPX_Package.log"
 		)
-	for /f %%P in (%$APPX_LIST%) DO @powershell Get-AppxPackage %%P -allusers | FIND /I "PackageFullName" >> "%$CD%\APPX_List_FullPackage.txt"
+	del /Q "%$CD%\APPX_List_FullPackage.txt" 2> nul 1> nul
+	del /Q "%$CD%\APPX_FullPackage_Name.txt" 2> nul 1> nul
+	for /f %%P in (%$APPX_LIST%) DO @powershell -command "(Get-AppxPackage %%P -allusers | Out-String -Width 100)" >> "%$CD%\APPX_FullPackage_Name.txt"
+	FIND /I "PackageFullName" "%$CD%\APPX_FullPackage_Name.txt" >> "%$CD%\APPX_List_FullPackage.txt"
 	echo Removing APPX packages from APPX list...
 	type %$APPX_LIST%
-	FOR /F "tokens=3 delims= " %%P IN (%$CD%\APPX_List_FullPackage.txt) do (
+	FOR /F "skip=2 tokens=3 delims= " %%P IN (%$CD%\APPX_List_FullPackage.txt) do (
 		echo removing %%P
 		@powershell Remove-AppxPackage -AllUsers -Package %%P 2> nul
 		)
 	echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
+	Timeout /T %$TIMEOUT%
 :skipP4
 	SET	$STEP_NUM=0
 	SET "$STEP_DESCRIP=Menu selection"
