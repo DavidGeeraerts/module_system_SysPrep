@@ -156,7 +156,7 @@ SET $IMAGE_TYPE=Base
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 echo Initializing...
-@powershell Write-Host "reading configuration file..." -ForegroundColor blue
+echo reading configuration file...
 
 :SLT
 	:: Start Time Start Date
@@ -210,14 +210,14 @@ echo Initializing...
 	SET $CONFIG_FILE=%$PARAMETER1%
 :skipParam
 
-IF NOT EXIST "%~dp0\%$CONFIG_FILE%" GoTo skipCF
+IF NOT EXIST "%~dp0\config\%$CONFIG_FILE%" GoTo skipCF
 SET "$STEP_DESCRIP=Reading properties file"
 echo Reading properties file...
 :: CHECK the Config file Schema version meets the minimum requirement
 SET $CONFIG_FILE_SCHEMA_CHECK=0
 SET $CONFIG_FILE_SCHEMA_CHECK_MINOR=0
 ::	Get the schema version from the properties file
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$CONFIG_SCHEMA_VERSION" "%~dp0\%$CONFIG_FILE%"') DO SET "$CONFIG_SCHEMA_VERSION=%%V"
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$CONFIG_SCHEMA_VERSION" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$CONFIG_SCHEMA_VERSION=%%V"
 
 ::  Parse schema version from configuration file
 ::		Revision number should never effect parsing ability, no check.
@@ -244,48 +244,48 @@ REM FOR /F %%R IN ('ECHO %VARIABLE%') DO SET $VARIABLE=%%R
 
 :: LOADING PROPERTIES
 :: [DELETE] Scheduled Tasks
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$KEYWORD_SCHEDULED_TASK" "%~dp0\%$CONFIG_FILE%"') DO SET "$KEYWORD_SCHEDULED_TASK=%%V"
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$KEYWORD_SCHEDULED_TASK" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$KEYWORD_SCHEDULED_TASK=%%V"
 echo $KEYWORD_SCHEDULED_TASK: %$KEYWORD_SCHEDULED_TASK%
 :: Windows Update KB exclusion
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$NotKBArticleID" "%~dp0\%$CONFIG_FILE%"') DO SET "$NotKBArticleID=%%V"
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$NotKBArticleID" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$NotKBArticleID=%%V"
 echo $NotKBArticleID: %$NotKBArticleID%
 ::	Timeout
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$TIMEOUT" "%~dp0\%$CONFIG_FILE%"') DO SET "$TIMEOUT=%%V"
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$TIMEOUT" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$TIMEOUT=%%V"
 echo $TIMEOUT: %$TIMEOUT%
 ::	Use unattend.xml for sysprep
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$UNATTEND_USE" "%~dp0\%$CONFIG_FILE%"') DO SET "$UNATTEND_USE=%%V"
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$UNATTEND_USE" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$UNATTEND_USE=%%V"
 echo $UNATTEND_USE: %$UNATTEND_USE%
 ::	Cleanup unattend after SysPrep
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$UNATTEND_CLEAN" "%~dp0\%$CONFIG_FILE%"') DO SET "$UNATTEND_CLEAN=%%V"
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$UNATTEND_CLEAN" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$UNATTEND_CLEAN=%%V"
 echo $UNATTEND_CLEAN: %$UNATTEND_CLEAN%
 ::	Folder name to store unattend xml files
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$UNATTEND_DIR" "%~dp0\%$CONFIG_FILE%"') DO SET "$UNATTEND_DIR=%%V"
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$UNATTEND_DIR" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$UNATTEND_DIR=%%V"
 echo $UNATTEND_DIR: %$UNATTEND_DIR%
 ::	Unattend.xml file name
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$UNATTEND_FILE" "%~dp0\%$CONFIG_FILE%"') DO SET "$UNATTEND_FILE=%%V"
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$UNATTEND_FILE" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$UNATTEND_FILE=%%V"
 echo $UNATTEND_FILE: %$UNATTEND_FILE%
 :: Default user from unattend.xml file
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$LOCAL_USER" "%~dp0\%$CONFIG_FILE%"') DO SET "$LOCAL_USER=%%V"
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$LOCAL_USER" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$LOCAL_USER=%%V"
 echo $LOCAL_USER: %$LOCAL_USER%
 ::	where to store logs from the working directory
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$LD" "%~dp0\%$CONFIG_FILE%"') DO SET "$LD=%%V"
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$LD" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$LD=%%V"
 echo $LD: %$LD%
 ::	module log file for session
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$MODULE_LOG" "%~dp0\%$CONFIG_FILE%"') DO SET "$MODULE_LOG=%%V"
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$MODULE_LOG" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$MODULE_LOG=%%V"
 FOR /F %%R IN ('ECHO %$MODULE_LOG%') DO SET $MODULE_LOG=%%R
 echo $MODULE_LOG: %$MODULE_LOG%
 :: Use Image server Information
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$IMAGE_USE" "%~dp0\%$CONFIG_FILE%"') DO SET "$IMAGE_USE=%%V"
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$IMAGE_USE" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$IMAGE_USE=%%V"
 echo $IMAGE_USE: %$IMAGE_USE%
 ::	Image server directory
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$IMAGE_DIRECTORY" "%~dp0\%$CONFIG_FILE%"') DO SET "$IMAGE_DIRECTORY=%%V"
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$IMAGE_DIRECTORY" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$IMAGE_DIRECTORY=%%V"
 FOR /F %%R IN ('ECHO %$IMAGE_DIRECTORY%') DO SET $IMAGE_DIRECTORY=%%R
 echo $IMAGE_DIRECTORY: %$IMAGE_DIRECTORY%
 :: File name for image server
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$IMAGE_FILE" "%~dp0\%$CONFIG_FILE%"') DO SET "$IMAGE_FILE=%%V"
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$IMAGE_FILE" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$IMAGE_FILE=%%V"
 echo $IMAGE_FILE: %$IMAGE_FILE%
 ::	Image Server image type
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$IMAGE_TYPE" "%~dp0\%$CONFIG_FILE%"') DO SET "$IMAGE_TYPE=%%V"
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$IMAGE_TYPE" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$IMAGE_TYPE=%%V"
 echo $IMAGE_TYPE: %$IMAGE_TYPE%
 echo End properties file parsing.
 

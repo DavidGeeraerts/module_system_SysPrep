@@ -1,6 +1,6 @@
 # Ignore Directories
 tools
-cache/*
+cache
 
 # Ignore files
 

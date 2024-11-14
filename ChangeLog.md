@@ -19,14 +19,18 @@
 
 ---
 
-## Version 3.0.0 (2024-11-13)
+## Version 3.0.0 (2024-11-14)
 
 #### Added
+- Rewrite of the entire program.
+- Interactive menu
+- APPX package list for removal
+- Scheduled task removal based on keyword list
 
 #### Changed
 - minimum config file version now 3.0.0
-
-#### Fixed
+- menu order
+- OS recon methods
 
 #### Deprecated
 - wmic command since it will be deprecated with Windows 11 24H2

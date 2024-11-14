@@ -44,6 +44,8 @@ Download the project as .zip file from [releases](https://github.com/DavidGeerae
 
 	- Removes [APPX](https://learn.microsoft.com/en-us/powershell/module/appx/get-appxpackage?view=windowsserver2022-ps) packages that are known to break sysprep
 
+	- APPX packages can be added back after image depployment.
+
 
 :five: Windows Update
 
