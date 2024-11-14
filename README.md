@@ -8,7 +8,6 @@
 
 Version 3 is a complete rewrite of the program.
 It's now interactive, and you can choose what you want to do.
-
 Automated processing of SysPrep.
 Log files will be stored where the program was executed from.
 
@@ -22,62 +21,65 @@ Download the project as .zip file from [releases](https://github.com/DavidGeerae
 
 :one: Configure the local administrator
 
-	- This will enable and set a blank password for the local administrator account.
-	- Computer will reboot to flush the local user profile so it can be deleted, after running APPX process.
+- This will enable and set a blank password for the local administrator account.
+
+- Computer will reboot to flush the local user profile so it can be deleted, after running APPX process.
 
 
 :two: Cleanup local user
 
-	- Deletes the local user profile used to initiialy log into windows; this is most often the same account used in [unattend.xml](https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/update-windows-settings-and-scripts-create-your-own-answer-file-sxs?view=windows-11)
+- Deletes the local user profile used to initiialy log into windows; this is most often the same account used in [unattend.xml](https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/update-windows-settings-and-scripts-create-your-own-answer-file-sxs?view=windows-11)
 
-	- Uses both powershell and cmd to properly remove user profile from registry and system.
+- Uses both powershell and cmd to properly remove user profile from registry and system.
 
 
 :three: Cleanup Scheduled tasks 
 
-	- Cleans up scheduled tasks created by the local user, such as OneDrive sync, etc.
+- Cleans up scheduled tasks created by the local user, such as OneDrive sync, etc.
 
-	- Use [config file](./config/module_system_SysPrep.properties) to add additional keywords.
+- Use [config file](./config/module_system_SysPrep.properties) to add additional keywords.
 
 
 :four: Windows APPX packages
 
-	- Removes [APPX](https://learn.microsoft.com/en-us/powershell/module/appx/get-appxpackage?view=windowsserver2022-ps) packages that are known to break sysprep
+- Removes [APPX](https://learn.microsoft.com/en-us/powershell/module/appx/get-appxpackage?view=windowsserver2022-ps) packages that are known to break sysprep
 
-	- APPX packages can be added back after image depployment.
+- Add APPX packages to the list in this [file:](./config/APPX_List.txt)
+
+- APPX packages can be added back after image depployment.
 
 
 :five: Windows Update
 
-	- Process windows updates via powershell [PSWindowsUpdate](https://www.powershellgallery.com/packages/PSWindowsUpdate) module
+- Process windows updates via powershell [PSWindowsUpdate](https://www.powershellgallery.com/packages/PSWindowsUpdate) module
 
-	- Can exclude KB's in the [config file](./config/module_system_SysPrep.properties)
+- Can exclude KB's in the [config file](./config/module_system_SysPrep.properties)
 
 :six: Disk Check, for dirty bit
 
-	- [Check to see if system volume has dirty bit](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/chkntfs)
+- [Check to see if system volume has dirty bit](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/chkntfs)
 
 
 :seven: CleanMgr, run disk cleanup
 
-	- Cleans up the system volume using [cleanmgr](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/cleanmgr)
+- Cleans up the system volume using [cleanmgr](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/cleanmgr)
 
 
 :eight:  Bitlocker check
 
-	- Checks to see if bitlocker is on for an encrypted system volume, and if so, it will unencrpyt to prepare for iamge capture.
+- Checks to see if bitlocker is on for an encrypted system volume, and if so, it will unencrpyt to prepare for iamge capture.
 
-	- Uses [manange-bde](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/manage-bde)
+- Uses [manange-bde](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/manage-bde)
 
 
 :nine: Reboot
 
-	- Careful when choosing to reboot. Some APPX packages are set to install on user login, including the local administrator. Once APPX package removal has run, that's the time to sysprep, which is to say that if you have a reason to reboot, run APPX package removal just before running sysprep. 
+- Careful when choosing to reboot. Some APPX packages are set to install on user login, including the local administrator. Once APPX package removal has run, that's the time to sysprep, which is to say that if you have a reason to reboot, run APPX package removal just before running sysprep. 
 
 
 :zero: SysPrep
 
-	- Everything you need to know about [Sysprep](https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/sysprep--system-preparation--overview?view=windows-11). A.k.a, read the documentation. 
+- Everything you need to know about [Sysprep](https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/sysprep--system-preparation--overview?view=windows-11). A.k.a, read the documentation. 
 
 
 ### :green_book: Instructions
