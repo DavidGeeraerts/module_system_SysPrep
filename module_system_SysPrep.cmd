@@ -32,8 +32,8 @@
 @echo Off
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=3.0.0
-SET $SCRIPT_BUILD=20241113 1430
+SET $SCRIPT_VERSION=3.1.0
+SET $SCRIPT_BUILD=20241114 1000
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -157,6 +157,7 @@ SET $IMAGE_TYPE=Base
 
 echo Initializing...
 echo reading configuration file...
+echo.
 
 :SLT
 	:: Start Time Start Date
@@ -312,7 +313,7 @@ SET "$LD=%$WD%\%$LD%\%COMPUTERNAME%"
 	for /f "tokens=3 delims= " %%P IN (%$CD%\Windows_Caption.txt) do SET $COMPANY=%%P
 	for /f "tokens=4 delims= " %%P IN (%$CD%\Windows_Caption.txt) do SET $OS=%%P
 	for /f "tokens=5 delims= " %%P IN (%$CD%\Windows_Caption.txt) do SET $OS_MAJOR=%%P
-	for /f "tokens=3-5 delims= " %%P IN (%$CD%\Windows_Caption.txt) do SET "$CAPTION=%%P %%Q %%R"
+	for /f "tokens=3-5 delims= " %%P IN (%$CD%\Windows_Caption.txt) do SET "$OS_CAPTION=%%P %%Q %%R"
 	:: Server
 	if %$OS_MAJOR%=="Server" FOR /F "skip=1 tokens=5 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "ProductName"') DO SET $OS_MAJOR=%%P
 	FOR /F "skip=1 tokens=3 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "EditionID"') DO SET $OS_EDITION=%%P
@@ -532,8 +533,9 @@ GoTo Menu
 	SET $STEP_NUM=4
 	SET $STEP_DESCRIP=%$Process_T_4%
 	CALL :banner
-	IF EXIST "%$CD%\%$PROCESS_4%" GoTo skipP4
-	Echo Processing %$STEP_DESCRIP% ...
+	IF EXIST "%$CD%\%$PROCESS_4%" (echo Reprocessing %$STEP_DESCRIP%...) else (
+		Echo Processing %$STEP_DESCRIP% ...
+		)
 	echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"
 	echo %date% %TIME% >> "%$CD%\%$PROCESS_4%"
 	::	Get list of all APPX packages	
