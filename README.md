@@ -1,9 +1,5 @@
 
-<<<<<<< HEAD
 <img src="/images/module_system_sysprep_logo.png" alt="Logo generated using Midjourney Image Generator" title="module_system_sysprep logo" width="500" height="500"/>
-=======
-<img src="/images/module_system_sysprep_logo.jpg" alt="Logo generated using Midjourney Image Generator" title="module_system_sysprep logo" width="500" height="500"/>
->>>>>>> 218cf94f70156065f6e9ff9a5bd7bc276b9777ef
 
 # :arrows_clockwise: module_system_SysPrep
 
