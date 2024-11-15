@@ -2,8 +2,11 @@
 tools
 cache
 
-# Ignore files
+# Ignore general files
 
 *_dev.cmd
 *.backup
 *.old
+
+# Ignore specific files
+Notes_Windows_Appx_Package_CleanUp.txt

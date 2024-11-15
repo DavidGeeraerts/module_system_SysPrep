@@ -32,8 +32,8 @@
 @echo Off
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=3.0.2
-SET $SCRIPT_BUILD=20241114 1500
+SET $SCRIPT_VERSION=3.1.0
+SET $SCRIPT_BUILD=20241115 0830
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -47,7 +47,7 @@ color 4E
 
 ::	Flushes the default user that is logged in
 ::	default user from unattend file
-SET $LOCAL_USER=Scientific
+SET $LOCAL_USER=
 
 :: [DELETE] Scheduled Task keyword search
 :: Keyword search is used to search for scheduled tasks that are created for users.
@@ -60,13 +60,13 @@ SET "$KEYWORD_SCHEDULED_TASK=OneDrive"
 :: [DELETE] Microsoft APPX Packages
 :: File that contains a list of APPX packages to delete using keywords
 :: pathed to config
-SET $APPX_LIST=%~dp0\config\APPX_List.txt
+SET $APPX_List=APPX_List.txt
 
-::	Windows Update via powershell, KB exclusion
-	::	NotKBArticleID with space between KB's
-		:: E.g. SET "$NotKBArticleID=KB4481252 KB4481252" 
-		::	KB4481252 = SilverLight
-SET "$NotKBArticleID=KB4481252"	
+:: Windows Update via powershell, KB exclusion
+:: NotKBArticleFile with space between KB's
+:: E.g. KB4481252 KB4481252 
+:: KB4481252 = SilverLight
+SET $NotKBArticleID=Windows_Update_KB_List.txt
 
 ::	Use Unatand.xml for SysPrep
 ::	No [0] Yes [1]
@@ -97,12 +97,15 @@ SET $TIMEOUT=5
 ::		*******************
 ::###########################################################################::
 
+:: Turn on [1] or off [0] 
+SET $DEGUB=0
+
 :: Default properties file name
 SET $CONFIG_FILE=module_system_SysPrep.properties
 
 ::	Minimum properties file schema version
 ::	DO NOT MODIFY
-SET $CONFIG_SCHEMA_VERSION_MIN=3.0.0
+SET $CONFIG_SCHEMA_VERSION_MIN=3.1.0
 
 ::	Log Directory
 SET $LD=logs
@@ -244,11 +247,19 @@ REM FOR /F %%R IN ('ECHO %VARIABLE%') DO SET $VARIABLE=%%R
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :: LOADING PROPERTIES
+:: Debug
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$DEGU" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$DEGU=%%V"
+echo $DEGU: %$DEGU%
+:: APPX list file
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$APPX_List" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$APPX_List=%%V"
+echo $APPX_List: %$APPX_List%
+if exist "%~dp0\config\%$APPX_List%" set "$APPX_List=%~dp0\config\%$APPX_List%"
 :: [DELETE] Scheduled Tasks
 FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$KEYWORD_SCHEDULED_TASK" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$KEYWORD_SCHEDULED_TASK=%%V"
 echo $KEYWORD_SCHEDULED_TASK: %$KEYWORD_SCHEDULED_TASK%
 :: Windows Update KB exclusion
 FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$NotKBArticleID" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$NotKBArticleID=%%V"
+set /P $NotKBArticleID= < "%~dp0\config\%$NotKBArticleID%"
 echo $NotKBArticleID: %$NotKBArticleID%
 ::	Timeout
 FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$TIMEOUT" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$TIMEOUT=%%V"
@@ -334,26 +345,38 @@ SET "$LD=%$WD%\%$LD%\%COMPUTERNAME%"
 	SET /P $OS_PRODUCT_KEY= < %$CD%\OS_PRODUCT_KEY.txt
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+:User
+:: In case the current logged on user is different from $Local_User, this ensures the local account will still get disabled so local administrator auto logs in.
+IF "%USERNAME%"=="Administrator" GoTo skipUser
+echo %USERNAME%> "%$CD%\Username.txt"
+IF NOT DEFINED $LOCAL_USER SET /P $LOCAL_USER= < "%$CD%\Username.txt"
+IF NOT "%USERNAME%"=="$LOCAL_USER" SET $LOCAL_USER=%USERNAME%
+:skipUser
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :start
 	echo %TIME% [INFO]	%DATE% Start... >> "%$LD%\%$MODULE_LOG%"
 	echo %TIME% [INFO]	Script Name: %$SCRIPT_NAME% >> "%$LD%\%$MODULE_LOG%"
 	echo %TIME% [INFO]	Script Version: %$SCRIPT_VERSION% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [DEBUG]	Script Build: %$SCRIPT_BUILD% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [INFO]	Computer: %COMPUTERNAME% >> "%$LD%\%$MODULE_LOG%"	
-	echo %TIME% [DEBUG]	Working directory [$WD]: %$WD% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [DEBUG]	Log directory [$LD]: %$LD% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [DEBUG]	Var directory [$VD]: %$CACHE% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [DEBUG]	$LOCAL_USER: %$LOCAL_USER% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [DEBUG]	$TIMEOUT: %$TIMEOUT% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [DEBUG]	$UNATTEND_USE: %$UNATTEND_USE% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [DEBUG]	$UNATTEND_CLEAN: %$UNATTEND_CLEAN% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [DEBUG]	$UNATTEND_FILE: %$Unattend_FILE% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [DEBUG]	$UNATTEND_DIR: %$UNATTEND_DIR% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [DEBUG]	$IMAGE_USE: %$IMAGE_USE% >> "%$LD%\%$MODULE_LOG%"
-	if %$IMAGE_USE% EQU 1 echo %TIME% [DEBUG]	$IMAGE_DIRECTORY: %$IMAGE_DIRECTORY% >> "%$LD%\%$MODULE_LOG%"
-	if %$IMAGE_USE% EQU 1 echo %TIME% [DEBUG]	$IMAGE_FILE: %$IMAGE_FILE% >> "%$LD%\%$MODULE_LOG%"
-	if %$IMAGE_USE% EQU 1 echo %TIME% [DEBUG]	$IMAGE_TYPE: %$IMAGE_TYPE% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	Script Build: %$SCRIPT_BUILD% >> "%$LD%\%$MODULE_LOG%"
+	echo %TIME% [INFO]	Computer: %COMPUTERNAME% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$Debug: %$Debug% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	Working directory [$WD]: %$WD% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	Log directory [$LD]: %$LD% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	cache directory [$CD]: %$CD% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$LOCAL_USER: %$LOCAL_USER% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	APPX_FILE: %$APPX_FILE% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$KEYWORD_SCHEDULED_TASK: %$KEYWORD_SCHEDULED_TASK% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$NotKBArticleID: %$NotKBArticleID% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$TIMEOUT: %$TIMEOUT% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$UNATTEND_USE: %$UNATTEND_USE% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$UNATTEND_CLEAN: %$UNATTEND_CLEAN% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$UNATTEND_FILE: %$Unattend_FILE% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$UNATTEND_DIR: %$UNATTEND_DIR% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$IMAGE_USE: %$IMAGE_USE% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 if %$IMAGE_USE% EQU 1 echo %TIME% [DEBUG]	$IMAGE_DIRECTORY: %$IMAGE_DIRECTORY% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 if %$IMAGE_USE% EQU 1 echo %TIME% [DEBUG]	$IMAGE_FILE: %$IMAGE_FILE% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 if %$IMAGE_USE% EQU 1 echo %TIME% [DEBUG]	$IMAGE_TYPE: %$IMAGE_TYPE% >> "%$LD%\%$MODULE_LOG%"
 	echo %TIME% [INFO]	OS Name: %$OS_CAPTION% >> "%$LD%\%$MODULE_LOG%"
 	echo %TIME% [INFO]	OS Display Version: %$OS_DISPLAY_VERSION% >> "%$LD%\%$MODULE_LOG%"
 	echo %TIME% [INFO]	OS Build Number: %$OS_CurrentBuildNumber% >> "%$LD%\%$MODULE_LOG%"
@@ -477,6 +500,7 @@ GoTo Menu
 	CALL :banner
 	IF EXIST "%$CD%\%$PROCESS_2%" GoTo skipP2	
 	Echo Processing %$STEP_DESCRIP% ...
+	echo Deleting the following user: %$LOCAL_USER%
 	echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
 	@powershell -command "(Get-WmiObject Win32_UserProfile | Select-Object LocalPath, SID | Out-String -Width 100)" >  "%$CD%\User_Profiles.txt"
 	IF NOT DEFINED $LOCAL_USER GoTo skipP2
@@ -764,7 +788,7 @@ GoTo Menu
 		@sysprep /oobe /generalize /shutdown
 		)
 	FIND /I "Error" "%WINDIR%\System32\Sysprep\Panther\setuperr.log" 1> nul 2> nul && SET $SYSPREP_ERROR=1
-	echo %TIME% [DEBUG]	$SYSPREP_ERROR: %$SYSPREP_ERROR% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$SYSPREP_ERROR: %$SYSPREP_ERROR% >> "%$LD%\%$MODULE_LOG%"
 	echo %TIME%	SysPrep error level: %$SYSPREP_ERROR% >> "%$CD%\%$PROCESS_0%"
 	echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
 	echo %$STEP_DESCRIP% Done.

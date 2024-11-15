@@ -18,14 +18,26 @@
 [//]: # (#### Deprecated)
 
 ---
+## Version 3.1.0 (2024-11-15)
+#### Added
+- sets the local user to first logged on user
+- debug variable for log output
+- console output for local user
+
+#### Changed
+- not KB list is now read from [file](config/Windows_Update_KB_List.txt)
+- $CONFIG_SCHEMA_VERSION_MIN to 3.1.0
+- - path to $APPX_LIST
+
+#### Fixed
+
+---
+
 
 ## Version 3.0.2 (2024-11-14)
 #### Fixed
 - APPX Package removal
 - path to $APPX_LIST
-
----
-
 
 ## Version 3.0.1 (2024-11-14)
 #### Fixed
