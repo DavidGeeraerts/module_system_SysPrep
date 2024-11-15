@@ -32,8 +32,8 @@
 @echo Off
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=3.1.0
-SET $SCRIPT_BUILD=20241115 0830
+SET $SCRIPT_VERSION=3.1.1
+SET $SCRIPT_BUILD=20241115 1030
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -60,7 +60,7 @@ SET "$KEYWORD_SCHEDULED_TASK=OneDrive"
 :: [DELETE] Microsoft APPX Packages
 :: File that contains a list of APPX packages to delete using keywords
 :: pathed to config
-SET $APPX_List=APPX_List.txt
+SET $APPX_FILE=APPX_List.txt
 
 :: Windows Update via powershell, KB exclusion
 :: NotKBArticleFile with space between KB's
@@ -98,7 +98,7 @@ SET $TIMEOUT=5
 ::###########################################################################::
 
 :: Turn on [1] or off [0] 
-SET $DEGUB=0
+SET $DEBUG=0
 
 :: Default properties file name
 SET $CONFIG_FILE=module_system_SysPrep.properties
@@ -248,12 +248,13 @@ REM FOR /F %%R IN ('ECHO %VARIABLE%') DO SET $VARIABLE=%%R
 
 :: LOADING PROPERTIES
 :: Debug
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$DEGU" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$DEGU=%%V"
-echo $DEGU: %$DEGU%
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$DEBUG" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$DEBUG=%%V"
+echo $DEBUG: %$DEBUG%
+IF NOT DEFINED $DEBUG SET $DEBUG=1
 :: APPX list file
-FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$APPX_List" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$APPX_List=%%V"
-echo $APPX_List: %$APPX_List%
-if exist "%~dp0\config\%$APPX_List%" set "$APPX_List=%~dp0\config\%$APPX_List%"
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$APPX_FILE" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$APPX_FILE=%%V"
+echo $APPX_FILE: %$APPX_FILE%
+if exist "%~dp0\config\%$APPX_FILE%" set "$APPX_FILE=%~dp0\config\%$APPX_FILE%"
 :: [DELETE] Scheduled Tasks
 FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$KEYWORD_SCHEDULED_TASK" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$KEYWORD_SCHEDULED_TASK=%%V"
 echo $KEYWORD_SCHEDULED_TASK: %$KEYWORD_SCHEDULED_TASK%
@@ -300,7 +301,9 @@ echo $IMAGE_FILE: %$IMAGE_FILE%
 FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$IMAGE_TYPE" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$IMAGE_TYPE=%%V"
 echo $IMAGE_TYPE: %$IMAGE_TYPE%
 echo End properties file parsing.
-
+echo.
+echo working directory:
+cd
 
 :skipCF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -314,7 +317,7 @@ SET "$LD=%$WD%\%$LD%\%COMPUTERNAME%"
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :OSR
-	:: Windows recon
+	echo Windows recon...
 	::IF NOT EXIST "%$CACHE%\OS_Caption.txt" wmic OS GET CAPTION /VALUE > "%$CACHE%\OS_Caption.txt"
 	::IF NOT EXIST "%$CACHE%\OS_BuildNumber.txt" wmic OS GET BUILDNUMBER /VALUE > "%$CACHE%\OS_BuildNumber.txt"
 	::IF NOT EXIST "%$CACHE%\ver.txt" ver > "%$CACHE%\ver.txt"
@@ -350,7 +353,7 @@ SET "$LD=%$WD%\%$LD%\%COMPUTERNAME%"
 IF "%USERNAME%"=="Administrator" GoTo skipUser
 echo %USERNAME%> "%$CD%\Username.txt"
 IF NOT DEFINED $LOCAL_USER SET /P $LOCAL_USER= < "%$CD%\Username.txt"
-IF NOT "%USERNAME%"=="$LOCAL_USER" SET $LOCAL_USER=%USERNAME%
+IF NOT "%USERNAME%"=="%$LOCAL_USER%" SET $LOCAL_USER=%USERNAME%
 :skipUser
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -365,7 +368,7 @@ IF NOT "%USERNAME%"=="$LOCAL_USER" SET $LOCAL_USER=%USERNAME%
 	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	Log directory [$LD]: %$LD% >> "%$LD%\%$MODULE_LOG%"
 	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	cache directory [$CD]: %$CD% >> "%$LD%\%$MODULE_LOG%"
 	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$LOCAL_USER: %$LOCAL_USER% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	APPX_FILE: %$APPX_FILE% >> "%$LD%\%$MODULE_LOG%"
+	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$APPX_FILE: %$APPX_FILE% >> "%$LD%\%$MODULE_LOG%"
 	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$KEYWORD_SCHEDULED_TASK: %$KEYWORD_SCHEDULED_TASK% >> "%$LD%\%$MODULE_LOG%"
 	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$NotKBArticleID: %$NotKBArticleID% >> "%$LD%\%$MODULE_LOG%"
 	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$TIMEOUT: %$TIMEOUT% >> "%$LD%\%$MODULE_LOG%"
@@ -388,7 +391,7 @@ IF NOT "%USERNAME%"=="$LOCAL_USER" SET $LOCAL_USER=%USERNAME%
 
 
 SET $BANNER=0
-SET $STEP_NUM=0
+SET $STEP_NUM=Main
 SET "$STEP_DESCRIP=Menu selection"
 
 :banner
@@ -460,7 +463,7 @@ Echo.
 ::	echo %$STEP_DESCRIP% Done.
 ::	Timeout /T %$TIMEOUT%
 :::skipP#
-::	SET	$STEP_NUM=0
+::	SET	$STEP_NUM=Main
 ::	SET "$STEP_DESCRIP=Menu selection"
 ::	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -487,7 +490,7 @@ Echo.
 	shutdown /R /T 5 /f /c "Reboot to flush logged on user profile and log in with Administrator account."
 	GoTo Exit
 :skipP1
-	SET	$STEP_NUM=0
+	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
 GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -516,7 +519,7 @@ GoTo Menu
 	echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
 :skipP2
 	type "%$CD%\User_Profiles.txt" > "%$CD%\%$PROCESS_2%"
-	SET	$STEP_NUM=0
+	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -546,7 +549,7 @@ GoTo Menu
 	GoTo STL
 :skipP3
 	echo %TIME% [INFO]	%$PROCESS_T_3% completed! >> "%$LD%\%$MODULE_LOG%"
-	SET	$STEP_NUM=0
+	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -570,10 +573,10 @@ GoTo Menu
 		)
 	del /Q "%$CD%\APPX_List_FullPackage.txt" 2> nul 1> nul
 	del /Q "%$CD%\APPX_FullPackage_Name.txt" 2> nul 1> nul
-	for /f %%P in (%$APPX_LIST%) DO @powershell -command "(Get-AppxPackage %%P -allusers | Out-String -Width 100)" >> "%$CD%\APPX_FullPackage_Name.txt"
+	for /f %%P in (%$APPX_FILE%) DO @powershell -command "(Get-AppxPackage %%P -allusers | Out-String -Width 100)" >> "%$CD%\APPX_FullPackage_Name.txt"
 	FIND /I "PackageFullName" "%$CD%\APPX_FullPackage_Name.txt" >> "%$CD%\APPX_List_FullPackage.txt"
 	echo Removing APPX packages from APPX list...
-	type %$APPX_LIST%
+	type %$APPX_FILE%
 	FOR /F "skip=2 tokens=3 delims= " %%P IN (%$CD%\APPX_List_FullPackage.txt) do (
 		echo removing %%P
 		@powershell Remove-AppxPackage -AllUsers -Package %%P 2> nul
@@ -581,7 +584,7 @@ GoTo Menu
 	echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
 	Timeout /T %$TIMEOUT%
 :skipP4
-	SET	$STEP_NUM=0
+	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -626,7 +629,7 @@ GoTo Menu
 	echo Windows update via powershell has completed!
 	Timeout /T %$TIMEOUT%
 :skipP5
-	SET	$STEP_NUM=0
+	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -646,7 +649,7 @@ GoTo Menu
 	echo %$STEP_DESCRIP% Done.
 	Timeout /T %$TIMEOUT%
 :skipP6
-	SET	$STEP_NUM=0
+	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -688,7 +691,7 @@ GoTo Menu
 	echo %$STEP_DESCRIP% Done.
 	Timeout /T %$TIMEOUT%
 :skipP7
-	SET	$STEP_NUM=0
+	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -715,7 +718,7 @@ GoTo Menu
 	echo %$STEP_DESCRIP% Done.
 	Timeout /T %$TIMEOUT%
 :skipP8
-	SET	$STEP_NUM=0
+	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -735,7 +738,7 @@ GoTo Menu
 	echo %$STEP_DESCRIP% Done.
 	GoTo exit
 :skipP9
-	SET	$STEP_NUM=0
+	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -797,7 +800,7 @@ GoTo Menu
 	IF %$SYSPREP_ERROR% EQU 1 GoTo sysprepE1
 	IF %$SYSPREP_ERROR% EQU 0 GoTo exit
 :skipP0
-	SET	$STEP_NUM=0
+	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

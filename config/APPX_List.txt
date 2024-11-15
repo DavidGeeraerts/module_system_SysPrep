@@ -3,6 +3,7 @@ Microsoft.WidgetsPlatformRuntime
 Microsoft.OneDriveSync
 MicrosoftWindows.Client.WebExperience
 Microsoft.BingNews
+Microsoft.BingSearch
 Microsoft.YourPhone
 Microsoft.WindowsMaps
 Microsoft.ZuneMusic

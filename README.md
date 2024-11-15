@@ -52,6 +52,10 @@ Download the project as .zip file from [releases](https://github.com/DavidGeerae
 
 - APPX packages can be added back after image depployment.
 
+- Troubleshoot this error: `SYSPRP Failed to remove apps for the current user: 0x80073cf2.`
+	- Open the setuperr.log and find which APPX package caused sysprep to fail.
+	- Add that package by name --not the full package name-- to the [APPX_List.txt](config/APPX_List.txt) file.
+
 
 :five: Windows Update
 
