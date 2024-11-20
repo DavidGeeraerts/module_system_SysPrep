@@ -32,8 +32,8 @@
 @echo Off
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=3.1.1
-SET $SCRIPT_BUILD=20241115 1030
+SET $SCRIPT_VERSION=3.2.0
+SET $SCRIPT_BUILD=20241120 0900
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -100,12 +100,24 @@ SET $TIMEOUT=5
 :: Turn on [1] or off [0] 
 SET $DEBUG=0
 
+:: LOG LEVEL CONTROL
+::  by default, INFO WARN ERROR FATAL
+::	if $DEBUG=1, it will set $LOG_LEVEL_ALL=1
+SET $LOG_LEVEL_ALL=0
+SET $LOG_LEVEL_INFO=1
+SET $LOG_LEVEL_WARN=1
+SET $LOG_LEVEL_ERROR=1
+SET $LOG_LEVEL_FATAL=1
+SET $LOG_LEVEL_DEBUG=0
+SET $LOG_LEVEL_TRACE=0
+
+
 :: Default properties file name
 SET $CONFIG_FILE=module_system_SysPrep.properties
 
 ::	Minimum properties file schema version
 ::	DO NOT MODIFY
-SET $CONFIG_SCHEMA_VERSION_MIN=3.1.0
+SET $CONFIG_SCHEMA_VERSION_MIN=3.2.0
 
 ::	Log Directory
 SET $LD=logs
@@ -251,6 +263,27 @@ REM FOR /F %%R IN ('ECHO %VARIABLE%') DO SET $VARIABLE=%%R
 FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$DEBUG" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$DEBUG=%%V"
 echo $DEBUG: %$DEBUG%
 IF NOT DEFINED $DEBUG SET $DEBUG=1
+:: Log level All
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$LOG_LEVEL_ALL" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$LOG_LEVEL_ALL=%%V"
+echo $LOG_LEVEL_ALL: %$LOG_LEVEL_ALL%
+:: Log level Info
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$LOG_LEVEL_INFO" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$LOG_LEVEL_INFO=%%V"
+echo $LOG_LEVEL_INFO: %$LOG_LEVEL_INFO%
+:: Log level Info
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$LOG_LEVEL_WARN" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$LOG_LEVEL_WARN=%%V"
+echo $LOG_LEVEL_WARN: %$LOG_LEVEL_WARN%
+:: Log level Error
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$LOG_LEVEL_ERROR" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$LOG_LEVEL_ERROR=%%V"
+echo $LOG_LEVEL_ERROR: %$LOG_LEVEL_ERROR%
+:: Log level Fatal
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$LOG_LEVEL_FATAL" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$LOG_LEVEL_FATAL=%%V"
+echo $LOG_LEVEL_FATAL: %$LOG_LEVEL_FATAL%
+:: Log level Debug
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$LOG_LEVEL_DEBUG" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$LOG_LEVEL_DEBUG=%%V"
+echo $LOG_LEVEL_DEBUG: %$LOG_LEVEL_DEBUG%
+:: Log level Trace
+FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$LOG_LEVEL_TRACE" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$LOG_LEVEL_TRACE=%%V"
+echo $LOG_LEVEL_TRACE: %$LOG_LEVEL_TRACE%
 :: APPX list file
 FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$APPX_FILE" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$APPX_FILE=%%V"
 echo $APPX_FILE: %$APPX_FILE%
@@ -300,11 +333,11 @@ echo $IMAGE_FILE: %$IMAGE_FILE%
 ::	Image Server image type
 FOR /F "tokens=2 delims=^=" %%V IN ('FINDSTR /BC:"$IMAGE_TYPE" "%~dp0\config\%$CONFIG_FILE%"') DO SET "$IMAGE_TYPE=%%V"
 echo $IMAGE_TYPE: %$IMAGE_TYPE%
+echo.
 echo End properties file parsing.
 echo.
 echo working directory:
 cd
-
 :skipCF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -313,10 +346,49 @@ cd
 SET "$LD=%$WD%\%$LD%\%COMPUTERNAME%" 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-
+::	Log level Configuration
+:logl
+IF %$DEBUG% EQU 1 SET $LOG_LEVEL_ALL=1
+IF %$LOG_LEVEL_ALL% EQU 1 (
+	SET LOG_LEVEL_INFO=1
+	SET LOG_LEVEL_WARN=1
+	SET LOG_LEVEL_ERROR=1
+	SET LOG_LEVEL_FATAL=1
+	SET LOG_LEVEL_DEBUG=1
+	SET LOG_LEVEL_TRACE=1
+	)
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+
+:: Start	:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:start
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	%DATE% Start... >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Script Name: %$SCRIPT_NAME% >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Script Version: %$SCRIPT_VERSION% >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	Script Build: %$SCRIPT_BUILD% >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Computer: %COMPUTERNAME% >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	Debug is turned on. >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	VARIABLE: $WD {%$WD%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	VARIABLE: Log directory $LD {%$LD%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	VARIABLE: cache directory $CD {%$CD%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	VARIABLE: $LOCAL_USER {%$LOCAL_USER%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	VARIABLE: $APPX_FILE {%$APPX_FILE%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	VARIABLE: $KEYWORD_SCHEDULED_TASK {%$KEYWORD_SCHEDULED_TASK%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	VARIABLE: $NotKBArticleID {%$NotKBArticleID%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	VARIABLE: $TIMEOUT {%$TIMEOUT%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	VARIABLE: $UNATTEND_USE {%$UNATTEND_USE%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	VARIABLE: $UNATTEND_CLEAN {%$UNATTEND_CLEAN%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	VARIABLE: $UNATTEND_FILE {%$Unattend_FILE%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	VARIABLE: $UNATTEND_DIR {%$UNATTEND_DIR%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	VARIABLE: $IMAGE_USE {%$IMAGE_USE%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 if %$IMAGE_USE% EQU 1 echo %TIME% [DEBUG]	$IMAGE_DIRECTORY {%$IMAGE_DIRECTORY%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 if %$IMAGE_USE% EQU 1 echo %TIME% [DEBUG]	$IMAGE_FILE {%$IMAGE_FILE%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 if %$IMAGE_USE% EQU 1 echo %TIME% [DEBUG]	$IMAGE_TYPE {%$IMAGE_TYPE%} >> "%$LD%\%$MODULE_LOG%"
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+::	Windows Recon	:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :OSR
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: OS Recon >> "%$LD%\%$MODULE_LOG%"
 	echo Windows recon...
 	::IF NOT EXIST "%$CACHE%\OS_Caption.txt" wmic OS GET CAPTION /VALUE > "%$CACHE%\OS_Caption.txt"
 	::IF NOT EXIST "%$CACHE%\OS_BuildNumber.txt" wmic OS GET BUILDNUMBER /VALUE > "%$CACHE%\OS_BuildNumber.txt"
@@ -325,76 +397,67 @@ SET "$LD=%$WD%\%$LD%\%COMPUTERNAME%"
 	:: Getting this info from registry is not reliable as Microsoft mainatins the OS info to 10 even when 11 for backwards capatability.
 	@powershell -command "(Get-WmiObject -Class Win32_OperatingSystem | Format-List -Property Caption)" > %$CD%\Windows_Caption.txt
 	for /f "tokens=3 delims= " %%P IN (%$CD%\Windows_Caption.txt) do SET $COMPANY=%%P
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE: $COMPANY {%$COMPANY%} >> "%$LD%\%$MODULE_LOG%"
 	for /f "tokens=4 delims= " %%P IN (%$CD%\Windows_Caption.txt) do SET $OS=%%P
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE: $OS {%$OS%} >> "%$LD%\%$MODULE_LOG%"
 	for /f "tokens=5 delims= " %%P IN (%$CD%\Windows_Caption.txt) do SET $OS_MAJOR=%%P
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE: $OS_MAJOR {%$OS_MAJOR%} >> "%$LD%\%$MODULE_LOG%"
 	for /f "tokens=3-5 delims= " %%P IN (%$CD%\Windows_Caption.txt) do SET "$OS_CAPTION=%%P %%Q %%R"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE: $OS_CAPTION {%$OS_CAPTION%} >> "%$LD%\%$MODULE_LOG%"
 	:: Server
 	if %$OS_MAJOR%=="Server" FOR /F "skip=1 tokens=5 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "ProductName"') DO SET $OS_MAJOR=%%P
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE: $OS_MAJOR {%$OS_MAJOR%} >> "%$LD%\%$MODULE_LOG%"
 	FOR /F "skip=1 tokens=3 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "EditionID"') DO SET $OS_EDITION=%%P
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE: $OS_EDITION {%$OS_EDITION%} >> "%$LD%\%$MODULE_LOG%"
 	:: WMIC deprecated with Windows 11 24H2
 	::FOR /F "tokens=2 delims==" %%P IN ('wmic os GET CAPTION /VALUE') DO SET $OS_CAPTION=%%P
 	::	Use ReleaseID if server
 	::	{Client, Server}
 	FOR /F "skip=1 tokens=3 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "InstallationType"') DO SET $OS_INSTALLATION_TYPE=%%P
-	if %$OS_INSTALLATION_TYPE%==Server (for /F "skip=1 tokens=3 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "ReleaseId"') DO SET $OS_DISPLAY_VERSION=%%P) ELSE ( 
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE: $OS_INSTALLATION_TYPE {%$OS_INSTALLATION_TYPE%} >> "%$LD%\%$MODULE_LOG%"
+	if "%$OS_INSTALLATION_TYPE%"=="Server" (for /F "skip=1 tokens=3 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "ReleaseId"') DO SET $OS_DISPLAY_VERSION=%%P) ELSE ( 
 		FOR /F "skip=1 tokens=3 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "DisplayVersion"') DO SET $OS_DISPLAY_VERSION=%%P
 	)
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE:  $OS_DISPLAY_VERSION {%$OS_DISPLAY_VERSION%} >> "%$LD%\%$MODULE_LOG%"
 	FOR /F "skip=1 tokens=3 delims= " %%P IN ('REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion" /V "CurrentBuildNumber"') DO SET $OS_CurrentBuildNumber=%%P
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE: $OS_CurrentBuildNumber {%$OS_CurrentBuildNumber%} >> "%$LD%\%$MODULE_LOG%"
 	FOR /F "tokens=4 delims=.]" %%P IN ('ver') DO SET $OS_BUILD_REVISION=%%P
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE: $OS_BUILD_REVISION {%$OS_BUILD_REVISION%} >> "%$LD%\%$MODULE_LOG%"
 	REM deprecated
 	::for /f "tokens=2 delims==" %%P IN ('wmic path SoftwareLicensingService get OA3xOriginalProductKey /Value') DO set $OS_PRODUCT_KEY=%%P
 	:: OS Product Key
 	@powershell -command "(Get-WmiObject -Query \"SELECT OA3xOriginalProductKey FROM SoftwareLicensingService\").OA3xOriginalProductKey" > %$CD%\OS_PRODUCT_KEY.txt
 	SET /P $OS_PRODUCT_KEY= < %$CD%\OS_PRODUCT_KEY.txt
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE: $OS_PRODUCT_KEY {%$OS_PRODUCT_KEY%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: OS Recon >> "%$LD%\%$MODULE_LOG%"
+	:: Log OS Info
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	OS Name: %$OS_CAPTION% >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	OS Display Version: %$OS_DISPLAY_VERSION% >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	OS Build Number: %$OS_CurrentBuildNumber% >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	OS Build Revision Number: %$OS_BUILD_REVISION% >> "%$LD%\%$MODULE_LOG%"	
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	OS Product Key: %$OS_PRODUCT_KEY% >> "%$LD%\%$MODULE_LOG%"
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :User
+IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: User >> "%$LD%\%$MODULE_LOG%"
 :: In case the current logged on user is different from $Local_User, this ensures the local account will still get disabled so local administrator auto logs in.
 IF "%USERNAME%"=="Administrator" GoTo skipUser
 echo %USERNAME%> "%$CD%\Username.txt"
 IF NOT DEFINED $LOCAL_USER SET /P $LOCAL_USER= < "%$CD%\Username.txt"
 IF NOT "%USERNAME%"=="%$LOCAL_USER%" SET $LOCAL_USER=%USERNAME%
+IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE: $LOCAL_USER {%$LOCAL_USER%} >> "%$LD%\%$MODULE_LOG%"
 :skipUser
-:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-:start
-	echo %TIME% [INFO]	%DATE% Start... >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [INFO]	Script Name: %$SCRIPT_NAME% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [INFO]	Script Version: %$SCRIPT_VERSION% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	Script Build: %$SCRIPT_BUILD% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [INFO]	Computer: %COMPUTERNAME% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$Debug: %$Debug% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	Working directory [$WD]: %$WD% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	Log directory [$LD]: %$LD% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	cache directory [$CD]: %$CD% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$LOCAL_USER: %$LOCAL_USER% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$APPX_FILE: %$APPX_FILE% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$KEYWORD_SCHEDULED_TASK: %$KEYWORD_SCHEDULED_TASK% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$NotKBArticleID: %$NotKBArticleID% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$TIMEOUT: %$TIMEOUT% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$UNATTEND_USE: %$UNATTEND_USE% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$UNATTEND_CLEAN: %$UNATTEND_CLEAN% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$UNATTEND_FILE: %$Unattend_FILE% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$UNATTEND_DIR: %$UNATTEND_DIR% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$IMAGE_USE: %$IMAGE_USE% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 if %$IMAGE_USE% EQU 1 echo %TIME% [DEBUG]	$IMAGE_DIRECTORY: %$IMAGE_DIRECTORY% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 if %$IMAGE_USE% EQU 1 echo %TIME% [DEBUG]	$IMAGE_FILE: %$IMAGE_FILE% >> "%$LD%\%$MODULE_LOG%"
-	IF %$Debug% EQU 1 if %$IMAGE_USE% EQU 1 echo %TIME% [DEBUG]	$IMAGE_TYPE: %$IMAGE_TYPE% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [INFO]	OS Name: %$OS_CAPTION% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [INFO]	OS Display Version: %$OS_DISPLAY_VERSION% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [INFO]	OS Build Number: %$OS_CurrentBuildNumber% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [INFO]	OS Build Revision Number: %$OS_BUILD_REVISION% >> "%$LD%\%$MODULE_LOG%"	
-	echo %TIME% [INFO]	OS Product Key: %$OS_PRODUCT_KEY% >> "%$LD%\%$MODULE_LOG%"
-	echo %TIME% [INFO]	Active session... >> "%$LD%\%$MODULE_LOG%"
+IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: User >> "%$LD%\%$MODULE_LOG%"
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-
+:: Banner	:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 SET $BANNER=0
 SET $STEP_NUM=Main
 SET "$STEP_DESCRIP=Menu selection"
 
 :banner
+IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: Banner >> "%$LD%\%$MODULE_LOG%"
 cls
 :: CONSOLE OUTPUT 
 echo   ****************************************************************
@@ -420,6 +483,7 @@ echo [ ]X. Exit
 echo.
 echo ----------------------------------------------------------------------
 echo.
+IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: Banner >> "%$LD%\%$MODULE_LOG%"
 IF %$BANNER% EQU 1 GoTo :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -452,39 +516,42 @@ Echo.
 
 ::	Template	:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :::P#
+::	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: P# >> "%$LD%\%$MODULE_LOG%"
 ::	SET $STEP_NUM=#
 ::	SET $STEP_DESCRIP=%$Process_T_#%
 ::	CALL :banner
 ::	IF EXIST "%$CD%\%$PROCESS_#%" GoTo skipP#
-::	echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
+::	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
 ::	Echo Processing %$STEP_DESCRIP% ...
 ::
-::	echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
+::	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
 ::	echo %$STEP_DESCRIP% Done.
 ::	Timeout /T %$TIMEOUT%
 :::skipP#
 ::	SET	$STEP_NUM=Main
 ::	SET "$STEP_DESCRIP=Menu selection"
+::	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: P# >> "%$LD%\%$MODULE_LOG%"
 ::	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-::	#1
+::	P1
 ::	Configure Local Administrator Account
 :P1
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: P1 >> "%$LD%\%$MODULE_LOG%"
 	SET	$STEP_NUM=1
 	SET $STEP_DESCRIP=%$Process_T_1%
 	CALL :banner
 	IF EXIST "%$CD%\$%PROCESS_1%" GoTo skipP1
 	Echo Processing %$STEP_DESCRIP% ...
-	echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
 	rem	there's a space between username and options which is the password (blank)
 	NET USER Administrator  /ACTIVE:YES && (echo %DATE% %TIME% > "%$CD%\%$PROCESS_1%")
 	NET USER >> "%$CD%\%$PROCESS_1%""
 	NET LOCALGROUP Administrators >> "%$CD%\%$PROCESS_1%"
 	NET USER Administrator >> "%$CD%\%$PROCESS_1%"
-	echo %TIME% [INFO]	%$STEP_DESCRIP%! >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	%$STEP_DESCRIP%! >> "%$LD%\%$MODULE_LOG%"
 	IF DEFINED $LOCAL_USER NET USER %$LOCAL_USER% /Active:No 2> nul
-	echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
 	::	no need to logoff if already logged in as Administrator
 	IF "%USERNAME%"=="Administrator" GoTo skipP1
 	shutdown /R /T 5 /f /c "Reboot to flush logged on user profile and log in with Administrator account."
@@ -492,53 +559,59 @@ Echo.
 :skipP1
 	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: P1 >> "%$LD%\%$MODULE_LOG%"
 GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-::	#2
+::	P2
 ::	Delete User profile used for Windows imaging; confired in config file
 :P2
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: P2 >> "%$LD%\%$MODULE_LOG%"
 	SET $STEP_NUM=2
 	SET $STEP_DESCRIP=%$Process_T_2%
 	CALL :banner
 	IF EXIST "%$CD%\%$PROCESS_2%" GoTo skipP2	
 	Echo Processing %$STEP_DESCRIP% ...
 	echo Deleting the following user: %$LOCAL_USER%
-	echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
 	@powershell -command "(Get-WmiObject Win32_UserProfile | Select-Object LocalPath, SID | Out-String -Width 100)" >  "%$CD%\User_Profiles.txt"
 	IF NOT DEFINED $LOCAL_USER GoTo skipP2
 	FINDSTR /I /C:"%$LOCAL_USER%" "%$CD%\User_Profiles.txt" 2> nul > "%$CD%\Default_User.txt"
 	IF %ERRORLEVEL% EQU 1 GoTo skipP2
 	for /f "tokens=2 delims= " %%P IN (%$CD%\Default_User.txt) do echo %%P> "%$CD%\User_SID.txt"
 	SET /P $USER_SID= < "%$CD%\User_SID.txt"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE: $USER_SID {%$USER_SID%} >> "%$LD%\%$MODULE_LOG%"
 	@powershell -command "(Get-WmiObject Win32_UserProfile | where {$_.SID -like '%$USER_SID%'} |  Remove-WmiObject)"
-	echo %TIME% [INFO]	%$PROCESS_T_2% completed! >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	%$PROCESS_T_2% completed! >> "%$LD%\%$MODULE_LOG%"
 	type "%$CD%\User_Profiles.txt" > "%$CD%\%$PROCESS_2%"
 	NET USER %$LOCAL_USER% >> "%$CD%\%$PROCESS_2%"
 	NET USER %$LOCAL_USER% /DELETE >> "%$CD%\%$PROCESS_2%"
-	echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
 :skipP2
 	type "%$CD%\User_Profiles.txt" > "%$CD%\%$PROCESS_2%"
 	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: P2 >> "%$LD%\%$MODULE_LOG%"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-:: #3
+:: P3
 :: Clean up task scheduler, OneDrive
 :P3
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: P3 >> "%$LD%\%$MODULE_LOG%"
 	SET $STEP_NUM=3
 	SET $STEP_DESCRIP=%$Process_T_3%
 	CALL :banner
 	IF EXIST "%$CD%\%$PROCESS_3%" GoTo skipP3	
 	Echo Processing %$STEP_DESCRIP% ...
-	echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
 	echo %DATE% %TIME% > "%$CD%\%$PROCESS_3%"
 	SET $TOKEN=1
 :STL
 	:: Scheduled task loop
 	SET $KEYWORD=
 	IF DEFINED $KEYWORD_SCHEDULED_TASK FOR /F "tokens=%$TOKEN% delims= " %%P IN ("%$KEYWORD_SCHEDULED_TASK%") DO SET $KEYWORD=%%P
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE: $KEYWORD {%$KEYWORD%} >> "%$LD%\%$MODULE_LOG%"
 	IF NOT DEFINED $KEYWORD GoTo skipP3
 	echo The following scheduled tasks will be delted: >> "%$CD%\%$PROCESS_3%"
 	SCHTASKS /QUERY /FO LIST | FIND /I "%$KEYWORD%" 2> nul >> "%$CD%\%$PROCESS_3%"
@@ -548,22 +621,24 @@ GoTo Menu
 	SET /A  $TOKEN=%$TOKEN% + 1
 	GoTo STL
 :skipP3
-	echo %TIME% [INFO]	%$PROCESS_T_3% completed! >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	%$PROCESS_T_3% completed! >> "%$LD%\%$MODULE_LOG%"
 	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: P3 >> "%$LD%\%$MODULE_LOG%"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-::	APPX Packages	:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::	P4	APPX Packages	:::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :P4
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: P4 >> "%$LD%\%$MODULE_LOG%"
 	SET $STEP_NUM=4
 	SET $STEP_DESCRIP=%$Process_T_4%
 	CALL :banner
 	IF EXIST "%$CD%\%$PROCESS_4%" (echo Reprocessing %$STEP_DESCRIP%...) else (
 		Echo Processing %$STEP_DESCRIP% ...
 		)
-	echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"
 	echo %date% %TIME% >> "%$CD%\%$PROCESS_4%"
 	::	Get list of all APPX packages	
 	echo Installed APPX packages: >> "%$CD%\%$PROCESS_4%"
@@ -581,23 +656,25 @@ GoTo Menu
 		echo removing %%P
 		@powershell Remove-AppxPackage -AllUsers -Package %%P 2> nul
 		)
-	echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
 	Timeout /T %$TIMEOUT%
 :skipP4
 	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: P4 >> "%$LD%\%$MODULE_LOG%"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-::	Windows Updates via Powershell	:::::::::::::::::::::::::::::::::::::::::::
+::	P5	Windows Updates via Powershell	:::::::::::::::::::::::::::::::::::::::
 :P5
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: P5 >> "%$LD%\%$MODULE_LOG%"
 	SET $STEP_NUM=5
 	SET $STEP_DESCRIP=%$Process_T_5%
 	CALL :banner
 	IF EXIST "%$CD%\%$PROCESS_5%" GoTo jumpWU
 	Echo Processing %$STEP_DESCRIP% ...
-	echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
 	:: Test if dependencies are already installed
 	@powershell Get-WindowsUpdate 2> nul
 	IF %ERRORLEVEL% EQU 0 GoTo jumpWU
@@ -625,43 +702,47 @@ GoTo Menu
 	@powershell Get-WURebootStatus
 	@powershell Get-WURebootStatus | FIND /I "True" 1> nul 2> nul && @powershell Write-Host "Computer needs to reboot!" -ForegroundColor Yellow
 	@powershell Get-WURebootStatus | FIND /I "False" 1> nul 2> nul && @powershell Write-Host "Computer reboot not required!" -ForegroundColor Yellow
-	echo %TIME% [INFO]	%$Process_T_5% Completed! >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	%$Process_T_5% Completed! >> "%$LD%\%$MODULE_LOG%"
 	echo Windows update via powershell has completed!
 	Timeout /T %$TIMEOUT%
 :skipP5
 	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: P5 >> "%$LD%\%$MODULE_LOG%"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-::	Dirty Bit Disk Check	:::::::::::::::::::::::::::::::::::::::::::::::::::
+::	P6	Dirty Bit Disk Check	:::::::::::::::::::::::::::::::::::::::::::::::
 :P6
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: P6 >> "%$LD%\%$MODULE_LOG%"
 	SET $STEP_NUM=6
 	SET $STEP_DESCRIP=%$Process_T_6%
 	CALL :banner
 	IF EXIST "%$CD%\%$PROCESS_6%" GoTo skipP6
-	echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
 	Echo Processing %$STEP_DESCRIP% ...
 	CHKNTFS %SYSTEMDRIVE% | FIND "%SYSTEMDRIVE% is dirty." && echo y | chkdsk %systemdrive% /B
 	echo %DATE% %TIME% > "%$CD%\%$PROCESS_6%"
-	echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
 	echo %$STEP_DESCRIP% Done.
 	Timeout /T %$TIMEOUT%
 :skipP6
 	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: P6 >> "%$LD%\%$MODULE_LOG%"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-::	Bitlocker check UNLOCK	:::::::::::::::::::::::::::::::::::::::::::::::::::
+::	P7	Bitlocker check UNLOCK	:::::::::::::::::::::::::::::::::::::::::::::::
 :P7
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: P7 >> "%$LD%\%$MODULE_LOG%"
 	SET $STEP_NUM=7
 	SET $STEP_DESCRIP=%$Process_T_7%
 	CALL :banner
 	IF EXIST "%$CD%\%$PROCESS_7%" GoTo skipP7
-	echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
 	Echo Processing %$STEP_DESCRIP% ...
 	REM Added to support Windows Server, failed to skip
 	where Manage-bde.exe & SET $BITLOCKER_STATUS=%ERRORLEVEL%
@@ -687,23 +768,25 @@ GoTo Menu
 	GoTo BLS
 	:skipBLS
 	echo %DATE% %TIME% >> "%$CD%\%$PROCESS_7%"
-	echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
 	echo %$STEP_DESCRIP% Done.
 	Timeout /T %$TIMEOUT%
 :skipP7
 	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: P7 >> "%$LD%\%$MODULE_LOG%"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-::	CLEANMGR	:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::	P8	CLEANMGR	:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :P8
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: P8 >> "%$LD%\%$MODULE_LOG%"
 	SET $STEP_NUM=8
 	SET $STEP_DESCRIP=%$Process_T_8%
 	CALL :banner
 	IF EXIST "%$CD%\%$PROCESS_8%" GoTo skipP8
-	echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
 	REG QUERY "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches" /S /V StateFlags0100 1> nul 2> nul
 	SET $CLEANER_STATUS=%ERRORLEVEL%
 	IF %$CLEANER_STATUS% EQU 0 GoTo jumpCS
@@ -713,44 +796,48 @@ GoTo Menu
 	echo Processing %$STEP_DESCRIP%...
 	echo %DATE% %TIME% Start... > "%$CD%\%$PROCESS_8%" 
 	CLEANMGR /SAGERUN:100
-	echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
 	echo %DATE% %TIME% End. >> "%$CD%\%$PROCESS_8%" 
 	echo %$STEP_DESCRIP% Done.
 	Timeout /T %$TIMEOUT%
 :skipP8
 	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: P8 >> "%$LD%\%$MODULE_LOG%"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-::	Final Reboot B4 SysPrep	:::::::::::::::::::::::::::::::::::::::::::::::::::
+::	P9	Final Reboot B4 SysPrep	:::::::::::::::::::::::::::::::::::::::::::::::
 :P9
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: P9 >> "%$LD%\%$MODULE_LOG%"
 	SET $STEP_NUM=9
 	SET $STEP_DESCRIP=%$Process_T_9%
 	CALL :banner
 	IF EXIST "%$CD%\%$PROCESS_9%" GoTo skipP9
-	echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
 	Echo Processing %$STEP_DESCRIP% ...
 	echo %DATE% %TIME% > "%$CD%\%$PROCESS_9%"
 	shutdown /R /T %$TIMEOUT% /f /c "Final Shutdown for SysPrep."
-	echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
 	echo %$STEP_DESCRIP% Done.
 	GoTo exit
 :skipP9
 	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: P9 >> "%$LD%\%$MODULE_LOG%"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-::	SysPrep	:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::	P0	SysPrep	:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :P0
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: P0 >> "%$LD%\%$MODULE_LOG%"
 	SET $STEP_NUM=0
 	SET $STEP_DESCRIP=%$Process_T_0%
 	CALL :banner
 	IF EXIST "%$CD%\%$PROCESS_0%" GoTo skipP0
-	echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
+	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
 	Echo Processing %$STEP_DESCRIP% ...
 	echo %DATE% %TIME%	%$STEP_DESCRIP% > "%$CD%\%$PROCESS_0%"
 	openfiles 1> nul 2> nul
@@ -758,7 +845,7 @@ GoTo Menu
 	IF %$ADMIN_STATUS% NEQ 0 GoTo sysprepE
 	IF %$IMAGE_USE% EQU 1 call :subIU
 	IF %$IMAGE_USE% EQU 1 set /P $IMAGE_NAME= < "%$IMAGE_DIRECTORY%\%$IMAGE_FILE%"
-	IF %$IMAGE_USE% EQU 1 echo %TIME% [INFO]	Image Name: %$IMAGE_NAME% >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_INFO% EQU 1 IF %$IMAGE_USE% EQU 1 echo %TIME% [INFO]	Image Name: %$IMAGE_NAME% >> "%$LD%\%$MODULE_LOG%"
 	:: Clean up Panther folder
 	IF EXIST "%SystemRoot%\System32\SysPrep\Panther" RD /S /Q "%SystemRoot%\System32\SysPrep\Panther"
 
@@ -791,7 +878,7 @@ GoTo Menu
 		@sysprep /oobe /generalize /shutdown
 		)
 	FIND /I "Error" "%WINDIR%\System32\Sysprep\Panther\setuperr.log" 1> nul 2> nul && SET $SYSPREP_ERROR=1
-	IF %$Debug% EQU 1 echo %TIME% [DEBUG]	$SYSPREP_ERROR: %$SYSPREP_ERROR% >> "%$LD%\%$MODULE_LOG%"
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	VARIABLE: $SYSPREP_ERROR {%$SYSPREP_ERROR%} >> "%$LD%\%$MODULE_LOG%"
 	echo %TIME%	SysPrep error level: %$SYSPREP_ERROR% >> "%$CD%\%$PROCESS_0%"
 	echo %TIME% [INFO]	%$STEP_DESCRIP% completed! >> "%$LD%\%$MODULE_LOG%"
 	echo %$STEP_DESCRIP% Done.
@@ -802,6 +889,7 @@ GoTo Menu
 :skipP0
 	SET	$STEP_NUM=Main
 	SET "$STEP_DESCRIP=Menu selection"
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: P0 >> "%$LD%\%$MODULE_LOG%"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -814,24 +902,30 @@ GoTo exit
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ::	ERRORS
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-	
+
+:: sysprep error E		:::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :sysprepE
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: sysprepE >> "%$LD%\%$MODULE_LOG%"
 	echo ERROR: Not running with Administrative privilege!
 	echo.
 	echo Run as administrator!
 	if exist "%$CD%\%$PROCESS_0%" DEL /F /Q "%$CD%\%$PROCESS_0%"
 	PAUSE
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: sysprepE >> "%$LD%\%$MODULE_LOG%"
 	GoTo exit
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+::	sysprep Error E1	:::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :sysprepE1
-::	Color CE 
+::	Color CE
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: sysprepE1 >> "%$LD%\%$MODULE_LOG%"
 	echo ERROR!
 	echo.
 	echo Check the sysprep error log!
 	@explorer "%WINDIR%\System32\Sysprep\Panther\setuperr.log"
 	PAUSE
 	if exist "%$CD%\%$PROCESS_0%" DEL /F /Q "%$CD%\%$PROCESS_0%"
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: sysprepE1 >> "%$LD%\%$MODULE_LOG%"
 	GoTo Menu
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -843,11 +937,12 @@ GoTo exit
 
 ::	Sub-routine for Use Image	:::::::::::::::::::::::::::::::::::::::::::::::
 :subIU
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: subIU >> "%$LD%\%$MODULE_LOG%"
 	echo Processing image name for image server...
-
 	IF NOT EXIST "%$IMAGE_DIRECTORY%" MD "%$IMAGE_DIRECTORY%"
 	echo %$OS%-%$OS_MAJOR%-%$OS_EDITION%-%$OS_DISPLAY_VERSION%-%$OS_CurrentBuildNumber%.%$OS_BUILD_REVISION%-%$IMAGE_TYPE%-img> "%$IMAGE_DIRECTORY%\%$IMAGE_FILE%"
 	echo %$OS%-%$OS_MAJOR%-%$OS_EDITION%-%$OS_DISPLAY_VERSION%-%$OS_CurrentBuildNumber%.%$OS_BUILD_REVISION%-%$IMAGE_TYPE%-img >  "%$LD%\%$IMAGE_FILE%"
+	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: subIU >> "%$LD%\%$MODULE_LOG%"
 	GoTo :eof
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 

@@ -1,4 +1,3 @@
-
 <img src="/images/module_system_sysprep_logo.png" alt="Logo generated using Midjourney Image Generator" title="module_system_sysprep logo" width="500" height="500"/>
 
 # :arrows_clockwise: module_system_SysPrep
@@ -27,7 +26,8 @@ Download the project as .zip file from [releases](https://github.com/DavidGeerae
 
 - This will enable and set a blank password for the local administrator account.
 
-- Computer will reboot to flush the local user profile so it can be deleted, after running APPX process.
+- Computer will reboot to flush the local user profile so it can be deleted.
+
 
 
 :two: Cleanup local user
@@ -35,6 +35,8 @@ Download the project as .zip file from [releases](https://github.com/DavidGeerae
 - Deletes the local user profile used to initiialy log into windows; this is most often the same account used in [unattend.xml](https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/update-windows-settings-and-scripts-create-your-own-answer-file-sxs?view=windows-11)
 
 - Uses both powershell and cmd to properly remove user profile from registry and system.
+
+- Testing shows that deleting a user and then running APPX package removal works.
 
 
 :three: Cleanup Scheduled tasks 
@@ -75,7 +77,7 @@ Download the project as .zip file from [releases](https://github.com/DavidGeerae
 
 :eight:  Bitlocker check
 
-- Checks to see if bitlocker is on for an encrypted system volume, and if so, it will unencrpyt to prepare for iamge capture.
+- Checks to see if bitlocker is on for an encrypted system volume, and if so, it will unencrpyt to prepare for image capture.
 
 - "If you run Sysprep on an NTFS file system partition that contains encrypted files or folders, the data in those folders becomes completely unreadable and unrecoverable."
 
@@ -141,6 +143,7 @@ Most basic would do the following:
 
 ##### :notebook: Notes (recent to old)
 
+- Windows event logs shuold be cleared out by sysprep.
 - Windows 8.1 and Windows Server 2012 or later, can sysprep up to 1001 times
 - Sysprep cannot be run under the context of a System account. Running Sysprep under the context of System account by using Task Scheduler or PSExec, for example, is not supported.
 - Remove APPX packages before deleting the local user used in unattend.xml
