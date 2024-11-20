@@ -19,6 +19,20 @@
 
 ---
 
+## Version 3.2.0 (2024-11-20)
+#### Added
+- log level control
+
+#### Changed
+- config
+- Order of start
+
+#### Fixed
+- formatting
+
+---
+
+
 ## Version 3.1.1 (2024-11-15)
 #### Added
 - Console output
@@ -29,8 +43,6 @@
 
 #### Fixed
 - $DEBUG variable
-
----
 
 
 ## Version 3.1.0 (2024-11-15)
