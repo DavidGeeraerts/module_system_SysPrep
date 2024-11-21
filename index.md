@@ -1,104 +1,158 @@
-# module_system_SysPrep
+<img src="https://github.com/DavidGeeraerts/module_system_SysPrep/blob/main/images/module_system_sysprep_logo.png" alt="Logo generated using Midjourney Image Generator" title="module_system_sysprep logo" width="500" height="500"/>
+
+# :arrows_clockwise: module_system_SysPrep
 
 
-## Description
+### :page_with_curl: Description
 
-Mostly automated processing of SysPrep
+Please refer to [Microsoft documentation on sysprep](https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/sysprep--system-preparation--overview?view=windows-11).
+
+Version 3 is a complete rewrite of the program.
+It's now a menu driven interactive program, so you can choose what you want to do.
+Automated processing of SysPrep for Windows 10 & 11; should work for Windows server that have only run basic Windows setup.
+Log files will be stored where the program was executed from.
 
 
 ### Download
 
-[Download Project](https://github.com/DavidGeeraerts/module_system_SysPrep/archive/main.zip)
+### :arrow_down: Download
 
-[Download .cmd](https://raw.githubusercontent.com/DavidGeeraerts/module_system_SysPrep/main/module_system_SysPrep.cmd) --right-click and "Save Link as..."
-
-
-### Process List
-
-1. Administrator, local configuration
-
-2. Users, cleanup local users
-
-3. Scheduled Task, cleanup
-
-4. Windows Update
-
-5. Disk Check, for dirty bit
-
-6. CleanMgr, run disk cleanup
-
-7. Final reboot, in preperation for running SysPrep
-
-8. SysPrep
+Download the project as .zip file from [releases](https://github.com/DavidGeeraerts/module_system_SysPrep/releases/latest)
 
 
-#### Instructions
+## :white_check_mark: Process List
 
-Flash drive friendly
+<img src="https://github.com/DavidGeeraerts/module_system_SysPrep/blob/main/images/Main_menu.png" alt="Main menu" title="module_system_sysprep main menu" width="500" height="500"/>
 
-- Manually run module_system_SysPrep with administrative privilege
-	- Pass any parameters in order, each subsequent parameter is dependent on the previous parameter being passed.
-	- meaning, if you want PARAMETER6, you have to pass all the parametrs 1-5
-- First run will configure the local administrator and log out current user, which should be the unattend.xml first logon user.
-- Log in with local Administrator account --no password 
-- CleanMgr will prompt if SAGE 100 is not set
-- Final Reboot will reboot and auto-login Administrator
-- Manually run module_system_SysPrep with privilege
+:one: Configure the local administrator
+
+- This will enable and set a blank password for the local administrator account.
+
+- Computer will reboot to flush the local user profile so it can be deleted.
 
 
-#### Dependencies
 
-- [Delprof2](https://helgeklein.com/free-tools/delprof2-user-profile-deletion-tool/)
-	- Useful tool that does a complete job. Better than Powershell:
-	- `Get-CimInstance -Class Win32_UserProfile | Where-Object { $_.LocalPath.split('\')[-1] -eq 'UserA' } | Remove-CimInstance`
-		- which leaves the user account on the system!
+:two: Cleanup local user
 
-#### Passing Paramters
+- Deletes the local user profile used to initiialy log into windows; this is most often the same account used in [unattend.xml](https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/update-windows-settings-and-scripts-create-your-own-answer-file-sxs?view=windows-11)
+
+- Uses both powershell and cmd to properly remove user profile from registry and system.
+
+- Testing shows that deleting a user and then running APPX package removal works.
+
+
+:three: Cleanup Scheduled tasks 
+
+- Cleans up scheduled tasks created by the local user, such as OneDrive sync, etc.
+
+- Use [config file](./config/module_system_SysPrep.properties) to add additional keywords.
+
+
+:four: Windows APPX packages
+
+- Removes [APPX](https://learn.microsoft.com/en-us/powershell/module/appx/get-appxpackage?view=windowsserver2022-ps) packages that are known to break sysprep
+
+- Add APPX packages to the list in this [file:](./config/APPX_List.txt) `APPX_List.txt`
+
+- APPX packages can be added back after image depployment.
+
+- Troubleshoot this error: `SYSPRP Failed to remove apps for the current user: 0x80073cf2.`
+	- Open the setuperr.log and find which APPX package caused sysprep to fail.
+	- Add that package by name --not the full package name-- to the [APPX_List.txt](config/APPX_List.txt) file.
+
+
+:five: Windows Update
+
+- Process windows updates via powershell [PSWindowsUpdate](https://www.powershellgallery.com/packages/PSWindowsUpdate) module
+
+- Can exclude KB's in the [properties file](./config/module_system_SysPrep.properties)
+
+:six: Disk Check, for dirty bit
+
+- [Check to see if system volume has dirty bit](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/chkntfs)
+
+
+:seven: CleanMgr, run disk cleanup
+
+- Cleans up the system volume using [cleanmgr](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/cleanmgr)
+
+
+:eight:  Bitlocker check
+
+- Checks to see if bitlocker is on for an encrypted system volume, and if so, it will unencrpyt to prepare for image capture.
+
+- "If you run Sysprep on an NTFS file system partition that contains encrypted files or folders, the data in those folders becomes completely unreadable and unrecoverable."
+
+- Uses [manange-bde](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/manage-bde)
+
+
+:nine: Reboot
+
+- Careful when choosing to reboot. Some APPX packages are set to install on user login, including the local administrator. Once APPX package removal has run, that's the time to sysprep, which is to say that if you have a reason to reboot, run APPX package removal just before running sysprep. 
+
+
+:zero: SysPrep
+
+- Everything you need to know about [Sysprep](https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/sysprep--system-preparation--overview?view=windows-11).
+
+#### Sysprep process overview
+
+When Sysprep runs, it goes through the following process:
+
+1. Sysprep verification. Verifies that Sysprep can run. Only an administrator can run Sysprep. Only one instance of Sysprep can run at a time. Also, Sysprep must run on the version of Windows that you used to install Sysprep.
+2. Logging initialization. Initializes logging. For more information, see Sysprep Log Files.
+3. Parsing command-line arguments. Parses command-line arguments. If a user does not provide command-line arguments, a System Preparation Tool window appears and enables users to specify Sysprep actions.
+4. Processing Sysprep actions. Processes Sysprep actions, calls appropriate .dll files and executable files, and adds actions to the log file.
+5. Verifying Sysprep processing actions. Verifies that all .dll files have processed all their tasks, and then either shuts down or restarts the system.
+
+
+### :green_book: Instructions
+
+Use a USB flash drive to run the program from, especially if you don't want to leave anything on the system when imaging. Can run from local storage if need be.
+Best practice is to use external storage such as a USB Flash drive. All the logs and cache will be saved to USB so they can be referenced in the future.
+Each sysprep run on a computer will be saved to its own directory.
+
+- Manually run module\_system\_SysPrep with administrative privilege
+	- Pass the config file name as a parameter if not using the default config.
+	- default `module_system_SysPrep.properties`
+
+#### :incoming_envelope: Passing Config file as Paramter
 
 - Open shell/terminal with administrative privilege
 - cd /D to module directory where module_system_SysPrep.cmd
-- parameters are seperated by a space; use double quotes if parameter has a space: *"parameter with space"*
-
-1. Paramter 1 ($CUSTOM_USER)
-	- String
-	- The user configured in the unattend.xml file
-
-2. Paramter 2 ($TIMEOUT)
-	- Seconds
-	- Console screen timeout. Default is 10 seconds
-
-3. Paramter 3 ($UNATTEND_CLEAN)
-	- {No,Yes}
-	- Clean up all the unattend.xml files from the systemdrive before running SysPrep
-	- Useful for cleanup if seeding unattend.xml file
-	- will flush Windows cache for unattend.xml/Autounattend.xml
-
-4. Parameter 4 ($Unattend_FILE)
-	- Unattend file name to seed
-	- can be set to 0 to bypass, otherwise if defined the unattend file will be seeded
-
-5. Parameter 5 ($UNATTEND_DIR)
-	- Full path to the directory
-	- defualt is Unattend (i.e. <Volume>:\Unattend)
-
-6. Paramter 6 ($DELPROF2_PATH)
-	- Directory path
-	- Where delprof2.exe resides in relation to the volume where the module is run from
-	- By default, Flash Drive Root\Tools
+- Pass config file name if not the default `module_system_SysPrep.properties`
+- Can have different properties files for different systems, then just pass the [custom] properties file as a parameter.
 
 Example:
-- *module_system_SysPrep.cmd Paramter1 Paramter2 Paramter3 Paramter4 Paramter5 Paramter6*
-- *module_system_SysPrep.cmd UnattendUser 10 1 SysPrep_unattned.xml Unattend Tools*
 
-**Parameters only need to be passed once for the session, as they are cached.**
+- `module_system_SysPrep.cmd` `Custom.properties`
 
-##### Notes
+Most basic would do the following:
+- Configure the local administrator and log out current user, which should be the unattend.xml first logon user.
+- Log in with local Administrator account --no password. This will be automatic. 
+- Run APPX package removal.
+- Run sysprep
 
+#### :orange_book: Dependencies
+
+- Must be run with local Administrator account -- which is why it gets activated.
+- cmd
+- Powershell
+- You must run Windows Setup before you use Sysprep.
+- You need a tool to capture an image of the installation, such as DISM - Deployment Image Servicing and Management Technical Reference for Windows or other disk-imaging software.
+	- [CloneZilla](https://clonezilla.org/) is recommended if not using DISM
+
+
+##### :notebook: Notes (recent to old)
+
+- Windows event logs shuold be cleared out by sysprep.
+- Windows 8.1 and Windows Server 2012 or later, can sysprep up to 1001 times
+- Sysprep cannot be run under the context of a System account. Running Sysprep under the context of System account by using Task Scheduler or PSExec, for example, is not supported.
+- Remove APPX packages before deleting the local user used in unattend.xml
+- Removes APPX packages that are known to break SysPrep in Window 10/11.
 - [Microsoft has deprecated the GUI for SysPrep since Windows 8.1](https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/sysprep--system-preparation--overview) 
 - SysPrep must be run with administrative privilege  
 - module_system_SysPrep logs will be saved here for archive:
 	- C:\Windows\System32\SysPrep\module_system_SysPrep\<ISO_DATE>
-
-### Contact
 
 Mention me @DavidGeeraerts
