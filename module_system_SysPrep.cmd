@@ -32,8 +32,8 @@
 @echo Off
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=3.2.0
-SET $SCRIPT_BUILD=20241120 0900
+SET $SCRIPT_VERSION=3.2.1
+SET $SCRIPT_BUILD=20241121 0930
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -350,18 +350,19 @@ SET "$LD=%$WD%\%$LD%\%COMPUTERNAME%"
 :logl
 IF %$DEBUG% EQU 1 SET $LOG_LEVEL_ALL=1
 IF %$LOG_LEVEL_ALL% EQU 1 (
-	SET LOG_LEVEL_INFO=1
-	SET LOG_LEVEL_WARN=1
-	SET LOG_LEVEL_ERROR=1
-	SET LOG_LEVEL_FATAL=1
-	SET LOG_LEVEL_DEBUG=1
-	SET LOG_LEVEL_TRACE=1
+	SET $LOG_LEVEL_INFO=1
+	SET $LOG_LEVEL_WARN=1
+	SET $LOG_LEVEL_ERROR=1
+	SET $LOG_LEVEL_FATAL=1
+	SET $LOG_LEVEL_DEBUG=1
+	SET $LOG_LEVEL_TRACE=1
 	)
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 :: Start	:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :start
+	echo. >> "%$LD%\%$MODULE_LOG%"
 	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	%DATE% Start... >> "%$LD%\%$MODULE_LOG%"
 	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Script Name: %$SCRIPT_NAME% >> "%$LD%\%$MODULE_LOG%"
 	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Script Version: %$SCRIPT_VERSION% >> "%$LD%\%$MODULE_LOG%"
@@ -582,7 +583,6 @@ GoTo Menu
 	SET /P $USER_SID= < "%$CD%\User_SID.txt"
 	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE: $USER_SID {%$USER_SID%} >> "%$LD%\%$MODULE_LOG%"
 	@powershell -command "(Get-WmiObject Win32_UserProfile | where {$_.SID -like '%$USER_SID%'} |  Remove-WmiObject)"
-	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	%$PROCESS_T_2% completed! >> "%$LD%\%$MODULE_LOG%"
 	type "%$CD%\User_Profiles.txt" > "%$CD%\%$PROCESS_2%"
 	NET USER %$LOCAL_USER% >> "%$CD%\%$PROCESS_2%"
 	NET USER %$LOCAL_USER% /DELETE >> "%$CD%\%$PROCESS_2%"
@@ -693,7 +693,6 @@ GoTo Menu
 :jumpWU
 	CALL :banner
 	@powershell Write-Host "If required, computer will auto-reboot!" -ForegroundColor Yellow
-	echo %TIME% [INFO]	Processing %$Process_T_5%... >> "%$LD%\%$MODULE_LOG%"
 	echo %Date% %TIME% >> "%$CD%\%$PROCESS_5%"
 	IF DEFINED $NotKBArticleID (
 		@powershell Install-WindowsUpdate -NotKBArticleID %$NotKBArticleID% -AcceptAll -AutoReboot) else (

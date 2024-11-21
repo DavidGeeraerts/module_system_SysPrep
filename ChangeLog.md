@@ -19,6 +19,19 @@
 
 ---
 
+## Version 3.2.1 (2024-11-21)
+#### Fixed
+- Error level setting
+
+#### Added
+- empty line at start of log for session
+
+#### Removed
+- redundent logging entries
+
+---
+
+
 ## Version 3.2.0 (2024-11-20)
 #### Added
 - log level control
@@ -29,8 +42,6 @@
 
 #### Fixed
 - formatting
-
----
 
 
 ## Version 3.1.1 (2024-11-15)
