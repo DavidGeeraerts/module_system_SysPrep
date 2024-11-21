@@ -143,7 +143,7 @@ Most basic would do the following:
 
 ##### :notebook: Notes (recent to old)
 
-- Windows event logs shuold be cleared out by sysprep.
+- [#3](https://github.com/DavidGeeraerts/module_system_SysPrep/issues/3) Windows event logs are cleared out by sysprep.
 - Windows 8.1 and Windows Server 2012 or later, can sysprep up to 1001 times
 - Sysprep cannot be run under the context of a System account. Running Sysprep under the context of System account by using Task Scheduler or PSExec, for example, is not supported.
 - Remove APPX packages before deleting the local user used in unattend.xml
