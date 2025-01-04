@@ -19,6 +19,14 @@
 
 ---
 
+## Version 3.3.0 (2025-01-04)
+#### Changed
+- directory when running from System drive, goes to where program was executed.
+- When running from USB drive, directory root is module root.
+
+---
+
+
 ## Version 3.2.1 (2024-11-21)
 #### Fixed
 - Error level setting
@@ -28,8 +36,6 @@
 
 #### Removed
 - redundent logging entries
-
----
 
 
 ## Version 3.2.0 (2024-11-20)
