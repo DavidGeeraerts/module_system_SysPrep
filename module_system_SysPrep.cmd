@@ -32,8 +32,8 @@
 @echo Off
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=3.2.1
-SET $SCRIPT_BUILD=20241121 0930
+SET $SCRIPT_VERSION=3.3.0
+SET $SCRIPT_BUILD=20250104 0915
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -190,10 +190,9 @@ echo.
 	Call :get-volume %$PATH%
 :get-volume
 	SET $VOLUME=%~d1
-	SET "$WD=%$VOLUME%
-	:: Not to use the root system, instead revert to Public directory  
-	if %$VOLUME%==%SystemDrive% SET $WD=%PUBLIC%\%$SCRIPT_NAME%
-	if not exist %$WD% MD %$WD%
+	SET $WD=%$VOLUME%
+	:: If running from the system drive, set the working directory to module directory
+	if %$VOLUME%==%SystemDrive% (SET $WD=%$PATH%) ELSE (SET $WD=%$VOLUME%\%$SCRIPT_NAME%)
 	CD /D "%$WD%"
 	:: Directory Checks
 	::	cache
@@ -744,10 +743,15 @@ GoTo Menu
 	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	Processing %$STEP_DESCRIP%... >> "%$LD%\%$MODULE_LOG%"	
 	Echo Processing %$STEP_DESCRIP% ...
 	REM Added to support Windows Server, failed to skip
+	REM By default, Server doesn't have Bitlocker activated.
 	where Manage-bde.exe & SET $BITLOCKER_STATUS=%ERRORLEVEL%
-	IF %$BITLOCKER_STATUS% EQU 1 GoTo skipP7
-	Manage-bde.exe -status %SYSTEMDRIVE% 2> nul || GoTo skipP7
+	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME% [DEBUG]	VARIABLE: $BITLOCKER_STATUS {%$BITLOCKER_STATUS%} >> "%$LD%\%$MODULE_LOG%"
+	IF %$BITLOCKER_STATUS% NEQ 0 (
+		echo %TIME% > "%$CD%\%$PROCESS_7%" 
+		GoTo skipP7
+	)
 	Manage-bde.exe -status %SYSTEMDRIVE% > "%$CD%\%$PROCESS_7%"
+	Manage-bde.exe -status %SYSTEMDRIVE% 2> nul || GoTo skipP7
 	FIND /I "Percentage Encrypted:" "%$CACHE%\Bitlocker.txt" >> "%$CD%\%$PROCESS_7%"
 	FIND /I "Protection Status:" "%$CACHE%\Bitlocker.txt" >> "%$CD%\%$PROCESS_7%"
 	SET $BITLOCKER=0
