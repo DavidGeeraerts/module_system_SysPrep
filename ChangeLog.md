@@ -19,12 +19,16 @@
 
 ---
 
+## Version 3.3.1 (2025-03-29)
+#### Fixed
+-  unattend.xml file was not fully pathed out as parameter for sysprep. 
+
+---
+
 ## Version 3.3.0 (2025-01-04)
 #### Changed
 - directory when running from System drive, goes to where program was executed.
 - When running from USB drive, directory root is module root.
-
----
 
 
 ## Version 3.2.1 (2024-11-21)

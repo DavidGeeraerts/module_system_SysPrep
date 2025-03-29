@@ -30,10 +30,11 @@
 
 :: Initialize the shell :::::::::::::::::::::::::::::::::::::::::::::::::::::::
 @echo Off
+:: Script Metadata
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=3.3.0
-SET $SCRIPT_BUILD=20250104 0915
+SET $SCRIPT_VERSION=3.3.1
+SET $SCRIPT_BUILD=20250329 1130
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -76,11 +77,10 @@ SET $UNATTEND_USE=0
 ::	Remove all Unattend.xml from the systemdrive
 ::	before running SysPrep
 ::	{No,Yes}
-::	0 = No
-::	1 = Yes
 SET $UNATTEND_CLEAN=Yes
 
 ::	Unattend directory from the root of the volume
+::	also the same as C:\Windows\Panther\Unattend
 SET $UNATTEND_DIR=Unattend
 
 ::	Name of unattend file to seed
@@ -877,7 +877,7 @@ GoTo Menu
 	echo Running SysPrep...
 	echo %DATE% %TIME% > "%$CD%\%$PROCESS_0%"
 	CD /D "%SystemRoot%\System32\SysPrep"
-	if %$UNATTEND_USE% EQU 1 (@sysprep /oobe /generalize /unattend:%$Unattend_FILE% /shutdown) ELSE (
+	if %$UNATTEND_USE% EQU 1 (@sysprep /oobe /generalize /unattend:"%SystemRoot%\Panther\Unattend\%$Unattend_FILE%" /shutdown) ELSE (
 		@sysprep /oobe /generalize /shutdown
 		)
 	FIND /I "Error" "%WINDIR%\System32\Sysprep\Panther\setuperr.log" 1> nul 2> nul && SET $SYSPREP_ERROR=1
