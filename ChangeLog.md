@@ -19,11 +19,20 @@
 
 ---
 
+## Version 3.4.0 (2025-07-20)
+#### Added
+-  %WINDIR%\Panther unattend.xml seed location
+
+#### Fixed
+- SYSTEM_ROOT --> %WINDIR%
+
+---
+
+
 ## Version 3.3.1 (2025-03-29)
 #### Fixed
 -  unattend.xml file was not fully pathed out as parameter for sysprep. 
-
----
+  
 
 ## Version 3.3.0 (2025-01-04)
 #### Changed

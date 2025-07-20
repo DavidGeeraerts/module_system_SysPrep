@@ -33,8 +33,8 @@
 :: Script Metadata
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=3.3.1
-SET $SCRIPT_BUILD=20250329 1130
+SET $SCRIPT_VERSION=3.4.0
+SET $SCRIPT_BUILD=20250720 0900
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -80,8 +80,9 @@ SET $UNATTEND_USE=0
 SET $UNATTEND_CLEAN=Yes
 
 ::	Unattend directory from the root of the volume
-::	also the same as C:\Windows\Panther\Unattend
-SET $UNATTEND_DIR=Unattend
+::	This is the location to use to seed an unattend.xml file using SysPrep
+::	also the same as C:\Windows\Panther
+SET $UNATTEND_DIR=Panther
 
 ::	Name of unattend file to seed
 SET $Unattend_FILE=unattend.xml
@@ -868,16 +869,18 @@ GoTo Menu
 	::	Unattend seed
 	IF %$UNATTEND_USE% EQU 0 GoTo skipUS
 	echo Seeding unattend.xml file...
-	IF DEFINED $Unattend_FILE IF NOT EXIST "%SystemRoot%\Panther\Unattend" MD "%SystemRoot%\Panther\Unattend"
-	DEL /Q /F "%SystemRoot%\Panther\Unattend\*"
-	IF DEFINED $Unattend_FILE copy /Y "%$UNATTEND_DIR%\%$Unattend_FILE%" "%SystemRoot%\Panther\Unattend"
-	IF NOT "%$Unattend_FILE%"=="unattend.xml" RENAME "%SystemRoot%\Panther\Unattend\%$Unattend_FILE%" "unattend.xml"
+	IF DEFINED $Unattend_FILE IF NOT EXIST "%WINDIR%\Panther\" MD "%WINDIR%\Panther\Unattend"
+	DEL /Q /F "%WINDIR%\Panther\Unattend\*"
+	IF DEFINED $Unattend_FILE copy /Y "%$UNATTEND_DIR%\%$Unattend_FILE%" "%WINDIR%\Panther\Unattend"
+	IF DEFINED $Unattend_FILE copy /Y "%$UNATTEND_DIR%\%$Unattend_FILE%" "%WINDIR%\Panther"
+	IF NOT "%$Unattend_FILE%"=="unattend.xml" RENAME "%WINDIR%%\Panther\Unattend\%$Unattend_FILE%" "unattend.xml"
+	IF NOT "%$Unattend_FILE%"=="unattend.xml" RENAME "%WINDIR%\Panther\%$Unattend_FILE%" "unattend.xml"
 :skipUS
 
 	echo Running SysPrep...
 	echo %DATE% %TIME% > "%$CD%\%$PROCESS_0%"
-	CD /D "%SystemRoot%\System32\SysPrep"
-	if %$UNATTEND_USE% EQU 1 (@sysprep /oobe /generalize /unattend:"%SystemRoot%\Panther\Unattend\%$Unattend_FILE%" /shutdown) ELSE (
+	CD /D "%WINDIR%\System32\SysPrep"
+	if %$UNATTEND_USE% EQU 1 (@sysprep /oobe /generalize /unattend:"%WINDIR%\Panther\%$Unattend_FILE%" /shutdown) ELSE (
 		@sysprep /oobe /generalize /shutdown
 		)
 	FIND /I "Error" "%WINDIR%\System32\Sysprep\Panther\setuperr.log" 1> nul 2> nul && SET $SYSPREP_ERROR=1
