@@ -33,8 +33,8 @@
 :: Script Metadata
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=3.5.0
-SET $SCRIPT_BUILD=20250720 0900
+SET $SCRIPT_VERSION=3.5.1
+SET $SCRIPT_BUILD=20261021 0830
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70
 mode con:lines=40
@@ -431,7 +431,10 @@ IF %$LOG_LEVEL_ALL% EQU 1 (
 	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE: $OS_PRODUCT_KEY {%$OS_PRODUCT_KEY%} >> "%$LD%\%$MODULE_LOG%"
 	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: OS Recon >> "%$LD%\%$MODULE_LOG%"
 	:: Log OS Info
-	echo Detected OS: %$OS_CAPTION% (%$OS_EDITION%), version %$OS_DISPLAY_VERSION%, build %$OS_CurrentBuildNumber%.%$OS_BUILD_REVISION%
+	echo Windows recon:
+	echo Detected OS: %$OS_CAPTION% (%$OS_EDITION%)
+	echo version: %$OS_DISPLAY_VERSION%
+	echo build: %$OS_CurrentBuildNumber%.%$OS_BUILD_REVISION%
 	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	OS Name: %$OS_CAPTION% >> "%$LD%\%$MODULE_LOG%"
 	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	OS Display Version: %$OS_DISPLAY_VERSION% >> "%$LD%\%$MODULE_LOG%"
 	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	OS Build Number: %$OS_CurrentBuildNumber% >> "%$LD%\%$MODULE_LOG%"

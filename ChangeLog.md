@@ -19,11 +19,16 @@
 
 ---
 
+## Version 3.5.1 (2026-10-21)
+#### Changed
+- windows recon output formatting
+
+---
+
+
 ## Version 3.5.0 (2026-10-21)
 #### Changed
 - Show the detected Windows edition, display version, and build in console output.
-
----
 
 ## Version 3.4.0 (2025-07-20)
 #### Added
