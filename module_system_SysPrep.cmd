@@ -33,7 +33,7 @@
 :: Script Metadata
 SETLOCAL Enableextensions
 SET $SCRIPT_NAME=module_system_SysPrep
-SET $SCRIPT_VERSION=3.4.0
+SET $SCRIPT_VERSION=3.5.0
 SET $SCRIPT_BUILD=20250720 0900
 Title %$SCRIPT_NAME% Version: %$SCRIPT_VERSION%
 mode con:cols=70

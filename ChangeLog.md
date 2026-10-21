@@ -19,9 +19,11 @@
 
 ---
 
-## Unreleased
+## Version 3.5.0 (2026-10-21)
 #### Changed
 - Show the detected Windows edition, display version, and build in console output.
+
+---
 
 ## Version 3.4.0 (2025-07-20)
 #### Added
@@ -29,9 +31,6 @@
 
 #### Fixed
 - SYSTEM_ROOT --> %WINDIR%
-
----
-
 
 ## Version 3.3.1 (2025-03-29)
 #### Fixed
