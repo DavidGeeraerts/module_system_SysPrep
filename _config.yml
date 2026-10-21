@@ -3,7 +3,7 @@ description: System preparation module for Windows.
 author: David Geeraerts
 url: "https://davidgeeraerts.github.io"
 baseurl: "/module_system_SysPrep"
-remote_theme: just-the-docs/just-the-docs
+theme: jekyll-theme-hacker
 
 search_enabled: true
 
