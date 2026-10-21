@@ -390,7 +390,6 @@ IF %$LOG_LEVEL_ALL% EQU 1 (
 ::	Windows Recon	:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :OSR
 	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	ENTER: OS Recon >> "%$LD%\%$MODULE_LOG%"
-	echo Windows recon...
 	::IF NOT EXIST "%$CACHE%\OS_Caption.txt" wmic OS GET CAPTION /VALUE > "%$CACHE%\OS_Caption.txt"
 	::IF NOT EXIST "%$CACHE%\OS_BuildNumber.txt" wmic OS GET BUILDNUMBER /VALUE > "%$CACHE%\OS_BuildNumber.txt"
 	::IF NOT EXIST "%$CACHE%\ver.txt" ver > "%$CACHE%\ver.txt"
@@ -432,6 +431,7 @@ IF %$LOG_LEVEL_ALL% EQU 1 (
 	IF %$LOG_LEVEL_DEBUG% EQU 1 echo %TIME%	[DEBUG]	VARIABLE: $OS_PRODUCT_KEY {%$OS_PRODUCT_KEY%} >> "%$LD%\%$MODULE_LOG%"
 	IF %$LOG_LEVEL_TRACE% EQU 1 echo %TIME%	[TRACE]	EXIT: OS Recon >> "%$LD%\%$MODULE_LOG%"
 	:: Log OS Info
+	echo Detected OS: %$OS_CAPTION% (%$OS_EDITION%), version %$OS_DISPLAY_VERSION%, build %$OS_CurrentBuildNumber%.%$OS_BUILD_REVISION%
 	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	OS Name: %$OS_CAPTION% >> "%$LD%\%$MODULE_LOG%"
 	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	OS Display Version: %$OS_DISPLAY_VERSION% >> "%$LD%\%$MODULE_LOG%"
 	IF %$LOG_LEVEL_INFO% EQU 1 echo %TIME% [INFO]	OS Build Number: %$OS_CurrentBuildNumber% >> "%$LD%\%$MODULE_LOG%"

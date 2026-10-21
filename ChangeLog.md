@@ -19,6 +19,10 @@
 
 ---
 
+## Unreleased
+#### Changed
+- Show the detected Windows edition, display version, and build in console output.
+
 ## Version 3.4.0 (2025-07-20)
 #### Added
 -  %WINDIR%\Panther unattend.xml seed location
