@@ -1,6 +1,8 @@
 title: module_system_SysPrep
 description: System preparation module for Windows.
 author: David Geeraerts
+url: "https://davidgeeraerts.github.io"
+baseurl: "/module_system_SysPrep"
 remote_theme: just-the-docs/just-the-docs
 
 search_enabled: true
@@ -23,7 +25,6 @@ relative_links:
 
 exclude:
   - AGENTS.md
-  - LICENSE
   - .github
   - .gitignore
   - .gitattributes
